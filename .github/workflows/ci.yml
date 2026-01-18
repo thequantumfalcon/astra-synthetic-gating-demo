@@ -34,9 +34,6 @@ jobs:
       - name: Run ASTRA reproduction
         run: python repro/run_astra.py
 
-      - name: Debug: show checked-out commit
-        run: git rev-parse HEAD
-
       - name: Verify against Zenodo goldens (portable)
         run: |
           echo "Running: python repro/verify_astra.py --mode portable"
