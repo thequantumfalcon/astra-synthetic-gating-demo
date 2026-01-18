@@ -363,7 +363,17 @@ def main() -> None:
     # Default to portable everywhere: modern NumPy / BLAS combos can introduce
     # tiny floating-point and formatting differences that are semantically
     # equivalent but not byte-identical.
-    mode = args.mode or "portable"
+    #
+    # Additionally, strict byte identity is only meaningful/reliable on the
+    # Windows environment used to generate the Zenodo goldens. To avoid CI
+    # brittleness, we never run strict mode on non-Windows platforms.
+    requested = args.mode
+    is_windows = platform.system().lower().startswith("win")
+    if requested == "strict" and not is_windows:
+        print("[verify] note: strict mode is Windows-only; using portable")
+        mode = "portable"
+    else:
+        mode = requested or "portable"
     strict_bytes = mode == "strict"
 
     if not BUNDLE_DIR.exists():
@@ -376,6 +386,8 @@ def main() -> None:
         pv = manifest.get("python_version")
         nv = manifest.get("numpy_version")
         print(f"[verify] manifest: python={pv} numpy={nv}")
+
+    print(f"[verify] mode: {mode}")
 
     mismatches: list[Mismatch] = []
 
