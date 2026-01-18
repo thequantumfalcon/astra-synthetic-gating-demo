@@ -24,7 +24,7 @@ Note: strict mode is Windows-only (the verifier will automatically fall back to 
 
 PDF files are not expected to be byte-for-byte identical across platforms or TeX distributions (timestamps and PDF object IDs vary); verification is based on the numerical artifacts and their inclusion in the rebuilt manuscript.
 
-CI (GitHub Actions) runs reproduction + **portable** verification on both Windows and Linux. The paper PDF is built in CI as a smoke test, but is not verified byte-for-byte.
+CI (GitHub Actions) runs reproduction + **portable** verification on both Windows and Linux. The paper PDF is built in CI on Linux as a smoke test, but is not verified byte-for-byte.
 
 ## Directory structure
 - `engine/` — MIT-licensed Python package source (`harmonic_matter_engine_v6`), including the ASTRA entrypoint (`python -m harmonic_matter_engine_v6.astra`).
