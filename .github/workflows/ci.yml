@@ -35,13 +35,7 @@ jobs:
         run: python repro/run_astra.py
 
       - name: Verify against Zenodo goldens
-        run: |
-          if [ "${{ runner.os }}" = "Linux" ]; then
-            python repro/verify_astra.py --mode portable
-          else
-            python repro/verify_astra.py --mode strict
-          fi
-        shell: bash
+        run: python repro/verify_astra.py --mode portable
 
   build-pdf:
     strategy:

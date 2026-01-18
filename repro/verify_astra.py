@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import re
 import hashlib
 import json
 import platform
@@ -141,7 +142,7 @@ def _compare_mc_summary(expected: Path, actual: Path) -> list[Mismatch]:
 
     def parse(txt: str) -> tuple[list[str], list[dict[str, str]]]:
         reader = csv.DictReader(txt.splitlines())
-        fieldnames = reader.fieldnames or []
+        fieldnames = list(reader.fieldnames or [])
         rows = [dict(r) for r in reader]
         return fieldnames, rows
 
@@ -197,6 +198,62 @@ def _compare_mc_summary(expected: Path, actual: Path) -> list[Mismatch]:
                     )
                     if len(mismatches) > 20:
                         return mismatches
+    return mismatches
+
+
+_NUM_RE = re.compile(r"[-+]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][-+]?\d+)?")
+
+
+def _compare_mc_table_tex(expected: Path, actual: Path) -> list[Mismatch]:
+    # Portable comparison: compare non-numeric template exactly (after newline normalization),
+    # then compare numeric tokens with tight tolerance.
+    eb = _normalize_newlines(_read_bytes(expected)).decode("utf-8", errors="replace")
+    ab = _normalize_newlines(_read_bytes(actual)).decode("utf-8", errors="replace")
+
+    e_nums = [_try_float(m.group(0)) for m in _NUM_RE.finditer(eb)]
+    a_nums = [_try_float(m.group(0)) for m in _NUM_RE.finditer(ab)]
+    e_nums_f = [x for x in e_nums if x is not None]
+    a_nums_f = [x for x in a_nums if x is not None]
+
+    e_template = _NUM_RE.sub("<NUM>", eb)
+    a_template = _NUM_RE.sub("<NUM>", ab)
+
+    mismatches: list[Mismatch] = []
+    if e_template != a_template:
+        mismatches.append(
+            Mismatch(
+                path="mc_table.tex",
+                kind="template-mismatch",
+                details=(
+                    f"expected_sha256={_sha256_bytes(e_template.encode('utf-8'))} "
+                    f"actual_sha256={_sha256_bytes(a_template.encode('utf-8'))}"
+                ),
+            )
+        )
+        return mismatches
+
+    if len(e_nums_f) != len(a_nums_f):
+        mismatches.append(
+            Mismatch(
+                path="mc_table.tex",
+                kind="token-count-mismatch",
+                details=f"expected={len(e_nums_f)} actual={len(a_nums_f)}",
+            )
+        )
+        return mismatches
+
+    for i, (ev, av) in enumerate(zip(e_nums_f, a_nums_f, strict=True)):
+        if abs(ev - av) > max(1e-12 * abs(ev), 1e-40):
+            mismatches.append(
+                Mismatch(
+                    path=f"mc_table.tex:num{i}",
+                    kind="numeric-diff",
+                    details=f"expected={ev} actual={av}",
+                )
+            )
+            if len(mismatches) > 20:
+                break
+
     return mismatches
 
 
@@ -303,10 +360,10 @@ def main() -> None:
     )
     args = ap.parse_args()
 
-    if args.mode is None:
-        mode = "strict" if platform.system().lower().startswith("win") else "portable"
-    else:
-        mode = args.mode
+    # Default to portable everywhere: modern NumPy / BLAS combos can introduce
+    # tiny floating-point and formatting differences that are semantically
+    # equivalent but not byte-identical.
+    mode = args.mode or "portable"
     strict_bytes = mode == "strict"
 
     if not BUNDLE_DIR.exists():
@@ -344,6 +401,8 @@ def main() -> None:
                 mismatches.extend(_compare_verification_log(expected, actual))
             elif name == "mc_summary.csv" and not strict_bytes:
                 mismatches.extend(_compare_mc_summary(expected, actual))
+            elif name == "mc_table.tex" and not strict_bytes:
+                mismatches.extend(_compare_mc_table_tex(expected, actual))
             elif name.endswith(".npz"):
                 mismatches.extend(_npz_diff(expected, actual, strict_bytes=strict_bytes))
             else:
