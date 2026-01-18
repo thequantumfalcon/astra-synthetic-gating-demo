@@ -5,6 +5,7 @@ type: dataset
 authors:
   - name: "Thomas Albrecht"
     affiliation: "Independent Researcher"
+    orcid: "https://orcid.org/0009-0000-3468-7064"
 date-released: "2026-01-16"
 version: "v5"
 keywords:
