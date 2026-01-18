@@ -1,0 +1,7 @@
+# Project runtime dependencies for the ASTRA synthetic gating demo.
+# This file is intentionally small; a fully pinned lock file can be added as requirements-lock.txt.
+
+numpy
+
+# Optional (not required for core artifact reproduction):
+# matplotlib

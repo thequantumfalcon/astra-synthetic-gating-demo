@@ -1,0 +1,17 @@
+\section{Appendix C: reviewer checklist}
+\label{app:checklist}
+
+\subsection{Checklist}
+\begin{enumerate}
+\item Run the proof script once with a fixed seed.
+\item Confirm that \texttt{verification\_log.txt} is produced.
+\item Confirm that \texttt{astra\_injection.npz} contains arrays \texttt{t}, \texttt{data}, \texttt{gated\_data}.
+\item (Optional) Run \texttt{--mc 200} and confirm \texttt{mc\_table.tex} and \texttt{mc\_summary.csv} are produced.
+\item Rebuild the PDF and confirm the table appears.
+\end{enumerate}
+
+\subsection{Common failure modes}
+\begin{itemize}
+\item If the PDF build fails, ensure a LaTeX distribution (e.g., MiK\TeX{}) is installed and \texttt{pdflatex} is on \texttt{PATH}.
+\item If Python cannot import the module entrypoint, run from the repository root and ensure the environment is activated.
+\end{itemize}

@@ -1,0 +1,3 @@
+# Placeholder lock file.
+# Generate from a known-good environment to maximize byte-identical outputs:
+#   pip freeze > requirements-lock.txt

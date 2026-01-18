@@ -1,0 +1,29 @@
+\section{Results}
+\label{sec:results}
+
+\subsection{Single-run reproducibility}
+A single run of the script produces a specific set of reported values and artifacts. The log file is intended to be the primary ``paper trail'' for reviewers who want to check numerical values without opening binary arrays.
+
+\subsection{Monte Carlo stability (optional)}
+If the Monte Carlo mode is executed, the script emits a small summary table capturing the distribution of outcome metrics across seeds.
+
+\IfFileExists{mc_table.tex}{
+\input{mc_table.tex}
+}{
+\begin{table}[t]
+\centering
+\caption{Monte Carlo table not present. Run \texttt{astra\_proof.py --mc 200} to generate \texttt{mc\_table.tex}.}
+\begin{tabular}{lc}
+\toprule
+Item & Status\\
+\midrule
+\texttt{mc\_table.tex} & missing\\
+\bottomrule
+\end{tabular}
+\end{table}
+}
+
+\subsection{Interpretation (bounded)}
+In this toy setting, gating tends to reduce extrema, which in turn reduces peak-based summary statistics. The magnitude of this effect depends on the chosen threshold $\tau$ and the injected transient's amplitude relative to the noise scale $\sigma$.
+
+This manuscript does not claim that the demonstrated magnitude transfers to real instruments; rather, it demonstrates the \emph{mechanism} clearly and reproducibly.
