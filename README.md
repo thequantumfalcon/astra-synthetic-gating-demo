@@ -18,6 +18,8 @@ By default the verifier runs in **portable** mode: it normalizes newlines and co
 If you want to enforce byte-identical artifacts (including `astra_injection.npz`) in a fully pinned environment, run **strict** mode explicitly:
 - `python repro/verify_astra.py --mode strict`
 
+Note: strict mode is Windows-only (the verifier will automatically fall back to portable mode on non-Windows platforms).
+
 PDF files are not expected to be byte-for-byte identical across platforms or TeX distributions (timestamps and PDF object IDs vary); verification is based on the numerical artifacts and their inclusion in the rebuilt manuscript.
 
 ## Directory structure
@@ -44,3 +46,5 @@ Create and activate a Python 3.11.9 environment, then install:
 
 ### 4) Build the paper PDF
 - `python repro/build_paper.py`
+
+Building the PDF requires a LaTeX distribution available on your PATH (e.g., MiKTeX on Windows, TeX Live on Linux).
