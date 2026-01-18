@@ -15,10 +15,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-SNAPSHOT_DEPOSIT = (
-    REPO_ROOT / "zenodo_snapshot" / "zenodo_deposit_2026-01-16_v5_final"
-)
-SNAPSHOT_ANCILLARY_ZIP = SNAPSHOT_DEPOSIT / "ASTRA_Ancillary_v5.zip"
+# Immutable Zenodo evidence (kept in-repo for public reproducibility)
+DEPOSIT_DIR = REPO_ROOT / "zenodo_deposit_2026-01-16_v5_final"
+DEPOSIT_ANCILLARY_ZIP = DEPOSIT_DIR / "ASTRA_Ancillary_v5.zip"
 
 BUNDLE_DIR = REPO_ROOT / "astra_submission_bundle"
 
@@ -334,15 +333,15 @@ def _npz_diff(expected: Path, actual: Path, *, strict_bytes: bool) -> list[Misma
 
 
 def _extract_goldens(tmp: Path) -> Path:
-    if not SNAPSHOT_ANCILLARY_ZIP.exists():
+    if not DEPOSIT_ANCILLARY_ZIP.exists():
         raise SystemExit(
-            f"Missing snapshot ancillary zip: {SNAPSHOT_ANCILLARY_ZIP} (did you copy zenodo_snapshot?)"
+            f"Missing deposit ancillary zip: {DEPOSIT_ANCILLARY_ZIP}"
         )
 
     out = tmp / "goldens"
     out.mkdir(parents=True, exist_ok=True)
 
-    with zipfile.ZipFile(SNAPSHOT_ANCILLARY_ZIP, "r") as z:
+    with zipfile.ZipFile(DEPOSIT_ANCILLARY_ZIP, "r") as z:
         z.extractall(out)
 
     return out

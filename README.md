@@ -11,7 +11,7 @@ This repository supports the ASTRA synthetic gating demo: a controlled, fixed-se
 Where a file contains its own license notice, that notice takes precedence for that file.
 
 ## Verification Contract (What “Same Results” Means)
-Reproduced outputs must match the `zenodo_snapshot/` goldens using the verifier in `repro/verify_astra.py`.
+Reproduced outputs must match the goldens contained in `zenodo_deposit_2026-01-16_v5_final/` using the verifier in `repro/verify_astra.py`.
 
 By default the verifier runs in **portable** mode: it normalizes newlines and compares numeric fields/arrays with strict tolerances so that semantically identical results pass even if byte-level representations differ across OS / NumPy / BLAS combinations.
 
@@ -28,7 +28,7 @@ CI (GitHub Actions) runs reproduction + **portable** verification on both Window
 - `engine/` — MIT-licensed Python package source (`harmonic_matter_engine_v6`), including the ASTRA entrypoint (`python -m harmonic_matter_engine_v6.astra`).
 - `paper/` — LaTeX manuscript sources used to rebuild the preprint (includes `paper.tex` and `sections/`).
 - `repro/` — Cross-platform scripts to regenerate artifacts, build the PDF, and verify outputs against goldens (writes a run manifest for traceability).
-- `zenodo_snapshot/` — Immutable, verbatim copy of the Zenodo deposit used as release evidence and golden-reference outputs; do not edit during development.
+- `zenodo_deposit_2026-01-16_v5_final/` — Immutable, verbatim copy of the Zenodo deposit used as release evidence and golden-reference outputs; do not edit during development.
 - `astra_output/` — Runtime-generated outputs from a non-MC run (created by the reproduction scripts).
 - `astra_submission_bundle/` — Runtime-generated bundle layout used by the paper build and verification scripts.
 
