@@ -11,7 +11,12 @@ This repository supports the ASTRA synthetic gating demo: a controlled, fixed-se
 Where a file contains its own license notice, that notice takes precedence for that file.
 
 ## Verification Contract (What “Same Results” Means)
-Reproduced outputs must match the `zenodo_snapshot/` goldens: on the pinned Windows environment we require byte-identical artifacts (including `astra_injection.npz`), and in cross-platform CI we use a portable verifier that normalizes newlines and compares numeric fields/arrays at strict tolerances; any mismatch is treated as a failure and reported with a manifest and diffs.
+Reproduced outputs must match the `zenodo_snapshot/` goldens using the verifier in `repro/verify_astra.py`.
+
+By default the verifier runs in **portable** mode: it normalizes newlines and compares numeric fields/arrays with strict tolerances so that semantically identical results pass even if byte-level representations differ across OS / NumPy / BLAS combinations.
+
+If you want to enforce byte-identical artifacts (including `astra_injection.npz`) in a fully pinned environment, run **strict** mode explicitly:
+- `python repro/verify_astra.py --mode strict`
 
 PDF files are not expected to be byte-for-byte identical across platforms or TeX distributions (timestamps and PDF object IDs vary); verification is based on the numerical artifacts and their inclusion in the rebuilt manuscript.
 
@@ -34,7 +39,8 @@ Create and activate a Python 3.11.9 environment, then install:
 - `python repro/run_astra.py`
 
 ### 3) Verify against Zenodo goldens
-- `python repro/verify_astra.py`
+- `python repro/verify_astra.py` (portable mode by default)
+- `python repro/verify_astra.py --mode strict` (byte-identical; requires a tightly pinned environment)
 
 ### 4) Build the paper PDF
 - `python repro/build_paper.py`
