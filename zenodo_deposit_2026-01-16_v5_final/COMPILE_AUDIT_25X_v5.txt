@@ -1,0 +1,37 @@
+ASTRA v5 25x clean-room compile audit
+Date: 1/12/2026 11:27:39 PM
+Zip:  (redacted local path)
+Host: (redacted)
+
+PASS iter 01
+PASS iter 02
+PASS iter 03
+PASS iter 04
+PASS iter 05
+Progress: 5/25 completed (passes=5, fails=0)
+PASS iter 06
+PASS iter 07
+PASS iter 08
+PASS iter 09
+PASS iter 10
+Progress: 10/25 completed (passes=10, fails=0)
+PASS iter 11
+PASS iter 12
+PASS iter 13
+PASS iter 14
+PASS iter 15
+Progress: 15/25 completed (passes=15, fails=0)
+PASS iter 16
+PASS iter 17
+PASS iter 18
+PASS iter 19
+PASS iter 20
+Progress: 20/25 completed (passes=20, fails=0)
+PASS iter 21
+PASS iter 22
+PASS iter 23
+PASS iter 24
+PASS iter 25
+Progress: 25/25 completed (passes=25, fails=0)
+
+Summary: passes=25, fails=0

@@ -1,0 +1,6 @@
+Zenodo fresh-extract verification (zip-only)
+Date: 2026-01-16 20:23:57
+Zip: C:\Users\tomal\Desktop\ZENODO_UPLOAD_READY_2026-01-16_v5_FINAL\zenodo_deposit_2026-01-16_v5_final.zip
+Zip SHA256: E5459E890B9C283F792DA989033BCC01B805D559CA6F99D489DCD395F82FE6D9
+Extract temp: C:\Temp\zenodo_fresh_9ebc501c-d79a-418e-a737-4027e1a9417a
+Overall: PASS

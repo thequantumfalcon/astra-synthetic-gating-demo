@@ -1,0 +1,33 @@
+\section{Appendix B: algorithm listing (pseudocode)}
+\label{app:algo}
+
+For ease of review, the core procedure can be expressed as:
+
+\begin{verbatim}
+Inputs:
+  fs, T, t0               # sample rate, duration, injection time
+  sigma                   # noise std
+  tau                     # gating threshold
+  seed                    # RNG seed
+
+Procedure:
+  t <- linspace(0, T, N)
+  h <- synthetic_injection(t; t0, <template parameters>)
+  n <- Normal(0, sigma) sampled with seed
+  x <- h + n
+  x_gated <- x
+  for each k:
+    if abs(x[k]) > tau:
+      x_gated[k] <- 0
+
+  snr_before <- max(abs(x)) / sigma
+  snr_after  <- max(abs(x_gated)) / sigma
+  gated_fraction <- count(abs(x) > tau) / N
+
+Outputs:
+  verification_log.txt
+  astra_injection.npz (t, x, x_gated)
+  optional MC summary table
+\end{verbatim}
+
+The implementation used for the results is the Python code provided in the bundle.

@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+.venv/
+venv/
+.env
+
+# Ruff / tooling
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# LaTeX build byproducts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# Generated runtime outputs
+astra_output/
+astra_submission_bundle/
+
+# OS
+.DS_Store
+Thumbs.db

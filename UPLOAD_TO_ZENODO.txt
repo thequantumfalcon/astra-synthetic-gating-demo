@@ -1,0 +1,36 @@
+Zenodo upload (quick steps)
+
+1) Sign in: https://zenodo.org
+2) Click: Upload → New upload
+
+3) Upload files (choose one approach):
+
+   Option A (single-file, simplest):
+   - Upload: zenodo_deposit_2026-01-16_v5_final.zip
+   - Note: Zenodo will treat this as one downloadable file (it will not display the inner files).
+
+   Option B (recommended for readability):
+   - Upload the *contents* of: zenodo_deposit_2026-01-16_v5_final/
+     This shows paper.pdf and the payload zips directly in the Zenodo file list.
+
+4) Metadata (suggested):
+   - Upload type: Publication (or Dataset is also acceptable; keep consistent)
+   - Title: ASTRA synthetic gating demo (preprint + reproducibility package)
+   - Authors/Creators: Thomas Albrecht
+     Affiliation: Independent Researcher
+   - Version: v5
+   - License: CC-BY-4.0
+   - Keywords: preprint; reproducibility; synthetic gating; signal processing; data preprocessing; gating; synthetic experiment
+   - Description: Use the text in zenodo_deposit_2026-01-16_v5_final/zenodo.json (field "description")
+
+5) (Recommended) Click “Reserve DOI” before publishing.
+6) Publish.
+
+After you later have an external preprint identifier (optional):
+- Edit the Zenodo record → add a Related identifier (isSupplementTo or isIdenticalTo) pointing at that URL.
+- Optionally create a new Zenodo version if you change any files.
+
+Local contents:
+- zenodo_deposit_2026-01-16_v5_final.zip is the single-file upload option.
+- zenodo_deposit_2026-01-16_v5_final/ contains the unpacked deposit (README, CITATION.cff, zenodo.json, SHA256SUMS.txt, and the payload zips/PDF).
+- zenodo_deposit_2026-01-16_v5_final/ASTRA_Source_v5_unpacked/ is an optional convenience copy of the LaTeX source for browsing.

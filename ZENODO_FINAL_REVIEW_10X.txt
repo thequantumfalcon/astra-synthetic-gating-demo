@@ -1,0 +1,16 @@
+Zenodo FINAL review (10 checks)
+Date: 2026-01-16 20:20:43
+Folder: <REDACTED_LOCAL_PATH>
+
+[PASS] Check 1 - Required artifacts present (zip, deposit dir, UPLOAD_TO_ZENODO.txt)
+[PASS] Check 2 - Top-level listing count=4
+[PASS] Check 3 - Expanded zip contents match expected set
+[PASS] Check 4 - SHA256SUMS verify: missing=0 mismatch=0
+[PASS] Check 5 - Banned-string scan (expanded top-level text files): hits=0
+[PASS] Check 6 - PDF scan (text+metadata): {"preprint_identifier": false, "classification": false, "userpath": false, "desktop": false, "email": false, "meta_userpath": false, "meta_desktop": false}
+[PASS] Check 7 - ASTRA_Source_v5.zip scan: byproducts=0 bannedHits=0
+[PASS] Check 8 - ASTRA_Ancillary_v5.zip scan: bannedHits=0
+[PASS] Check 9 - Junk-file scan: count=0
+[PASS] Check 10 - Binary byte-scan of expanded top-level files: flagged=0
+
+Summary: PASS=10 FAIL=0

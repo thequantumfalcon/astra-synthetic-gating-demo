@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>Harmonic Matter Engine v6.0 — Foundry Liquid</title>
+    <style>
+      html, body { height: 100%; margin: 0; background: #0b0b0f; color: #d7d7e0; font-family: system-ui, sans-serif; }
+      #hud { position: fixed; top: 12px; left: 12px; font-size: 13px; opacity: 0.9; }
+      canvas { display: block; width: 100%; height: 100%; }
+      code { color: #b8c0ff; }
+    </style>
+  </head>
+  <body>
+    <div id="hud">
+      <div><strong>Foundry Liquid</strong> — WebGL Point Viewer</div>
+      <div>Loads <code>output/particles.json</code> created by the orchestrator.</div>
+    </div>
+    <canvas id="c"></canvas>
+
+    <script>
+      const canvas = document.getElementById('c');
+      const gl = canvas.getContext('webgl');
+      if (!gl) {
+        document.body.innerHTML = '<p style="padding:16px">WebGL unavailable.</p>';
+        throw new Error('WebGL unavailable');
+      }
+
+      function resize() {
+        const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        canvas.width = Math.floor(canvas.clientWidth * dpr);
+        canvas.height = Math.floor(canvas.clientHeight * dpr);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      const vs = `
+        attribute vec3 a_pos;
+        uniform float u_pointSize;
+        void main() {
+          gl_Position = vec4(a_pos, 1.0);
+          gl_PointSize = u_pointSize;
+        }
+      `;
+      const fs = `
+        precision mediump float;
+        void main() {
+          vec2 p = gl_PointCoord * 2.0 - 1.0;
+          float r2 = dot(p, p);
+          if (r2 > 1.0) discard;
+          gl_FragColor = vec4(0.72, 0.76, 0.95, 0.9);
+        }
+      `;
+
+      function compile(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+          throw new Error(gl.getShaderInfoLog(s));
+        }
+        return s;
+      }
+
+      const prog = gl.createProgram();
+      gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(prog));
+      }
+      gl.useProgram(prog);
+
+      const aPos = gl.getAttribLocation(prog, 'a_pos');
+      const uPointSize = gl.getUniformLocation(prog, 'u_pointSize');
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.enableVertexAttribArray(aPos);
+      gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+
+      async function load() {
+        const res = await fetch('./output/particles.json');
+        const json = await res.json();
+        const positions = json.positions || [];
+        const flat = new Float32Array(positions.length * 3);
+        for (let i = 0; i < positions.length; i++) {
+          flat[i*3+0] = positions[i][0];
+          flat[i*3+1] = positions[i][1];
+          flat[i*3+2] = positions[i][2];
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, flat, gl.STATIC_DRAW);
+        return positions.length;
+      }
+
+      let count = 0;
+      load().then(n => { count = n; render(); }).catch(() => {
+        document.getElementById('hud').innerHTML += '<div style="margin-top:8px">Missing output/particles.json. Run the orchestrator first.</div>';
+      });
+
+      function render() {
+        gl.clearColor(0.043, 0.043, 0.06, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.uniform1f(uPointSize, Math.max(1.0, Math.min(3.0, canvas.width / 600)));
+        gl.drawArrays(gl.POINTS, 0, count);
+        requestAnimationFrame(render);
+      }
+    </script>
+  </body>
+</html>

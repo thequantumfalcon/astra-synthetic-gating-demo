@@ -1,0 +1,69 @@
+\section{Methods: synthetic injection and gating}
+\label{sec:methods}
+
+This section defines the minimal experiment implemented by \texttt{astra\_proof.py}.
+
+\subsection{Signal construction}
+We construct a time grid $t \in [0, T]$ sampled at $f_s$ Hz. A synthetic transient $h(t)$ is injected at time $t_0$ with a narrow envelope. The precise functional form is specified by the code and is part of the reproducibility contract.
+
+The observed series is
+\begin{equation}
+\label{eq:observed}
+ x(t) = h(t) + n(t),
+\end{equation}
+where $n(t)$ is additive, zero-mean Gaussian noise with standard deviation $\sigma$.
+
+\subsection{Gating operator}
+We apply a simple amplitude threshold gate. In the abstract, a gating operator takes an input series $x(t)$ and produces an altered series $g(x)(t)$ by applying a rule such as
+\begin{equation}
+\label{eq:gating}
+ g(x)(t) = \begin{cases}
+ 0, & |x(t)| > \tau \\
+ x(t), & \text{otherwise,}
+ \end{cases}
+\end{equation}
+where $\tau$ is a threshold. For convenience we report the \emph{gated fraction}
+\medskip
+
+\noindent Formally, the gate is just an elementwise nonlinear operator; it is used here as a transparent toy model of amplitude-based transient mitigation.
+\begin{equation}
+\label{eq:gatedfrac}
+ f_g = \frac{1}{N}\sum_{k=1}^N \mathbb{I}(|x_k| > \tau),
+\end{equation}
+where $x_k$ denotes the discrete samples.
+
+\subsection{Summary statistics}
+We compute simple before/after summary statistics that are easy to verify:
+\begin{itemize}
+\item Peak SNR proxy before gating: $\max_t |x(t)| / \sigma$.
+\item Peak SNR proxy after gating: $\max_t |g(x)(t)| / \sigma$.
+\item Gated fraction $f_g$.
+\end{itemize}
+
+These are not meant to replicate matched filtering or Bayesian inference; they are chosen for transparency.
+
+\subsection{Determinism and artifacts}
+For a fixed seed, the script writes:
+\begin{itemize}
+\item \texttt{verification\_log.txt}: a human-readable report of the parameters and measured statistics.
+\item \texttt{astra\_injection.npz}: arrays $t$, $x$, and $g(x)$.
+\end{itemize}
+
+Optionally, with \texttt{--mc N}, the script runs $N$ trials (seed sweep) and writes:
+\begin{itemize}
+\item \texttt{mc\_summary.csv}: per-trial statistics.
+\item \texttt{mc\_table.tex}: a compact LaTeX table with quantiles.
+\end{itemize}
+
+\subsection{Proposed test on real/open strain (falsifiable protocol)}
+The synthetic experiment above establishes a mechanism: gating can suppress a burst-shaped transient prior to scoring. To make the hypothesis falsifiable on real data \emph{when and if the relevant segment is public}, the bundle includes \texttt{astra\_real\_verify.py}, which implements an explicit protocol with a real/open-data attempt (via \texttt{gwpy}) and a documented synthetic fallback.
+
+The proposed test can be stated as a checklist:
+\begin{enumerate}
+\item Select a target GPS time $t_\mathrm{gps}$ and detector(s) (e.g., H1/L1) and fetch a window of strain around $t_\mathrm{gps}\pm 32\,$s if open data are available.
+\item Define an injected or hypothesized burst template (frequency, damping time, and amplitude scale used for the protocol comparison).
+\item Compute a proxy recovery score on the \emph{ungated} stream and on a \emph{gated} stream produced by a clearly specified rule.
+\item Report the ratio of ungated-to-gated scores, and archive the full code, parameters, and logs.
+\end{enumerate}
+
+\noindent \textbf{Pass/fail criterion (for the gating-suppression prediction):} the prediction is supported if, under the specified rule, the ungated stream yields a meaningfully larger proxy recovery score than the gated stream (e.g., a multi-$\times$ ratio), and this behavior is stable under small perturbations of the gating parameters. The prediction is falsified if no such suppression is observed under reasonable gating rules.

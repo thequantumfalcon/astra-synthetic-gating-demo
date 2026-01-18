@@ -1,0 +1,81 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  reproduce-and-verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+
+    env:
+      PYTHONHASHSEED: "0"
+      OMP_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Run ASTRA reproduction
+        run: python repro/run_astra.py
+
+      - name: Verify against Zenodo goldens
+        run: python repro/verify_astra.py
+
+  build-pdf:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+
+      - name: Install dependencies (for build script)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Generate bundle (includes paper sources + artifacts)
+        run: python repro/run_astra.py
+
+      - name: Install LaTeX (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-bibtex-extra
+
+      - name: Install MiKTeX (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install miktex -y --no-progress
+          $miktexBin = "C:\\Program Files\\MiKTeX\\miktex\\bin\\x64"
+          if (Test-Path $miktexBin) {
+            $env:Path = "$miktexBin;" + $env:Path
+            echo $miktexBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+          initexmf --set-config-value "[MPM]AutoInstall=1"
+
+      - name: Build paper PDF
+        run: python repro/build_paper.py

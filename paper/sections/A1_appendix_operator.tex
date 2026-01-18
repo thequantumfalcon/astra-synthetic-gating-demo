@@ -1,0 +1,34 @@
+\appendix
+\section{Appendix A: operator viewpoint}
+\label{app:operator}
+
+This appendix expands on the operator viewpoint used in the main text.
+
+Let $x \in \mathbb{R}^N$ be a discrete time series. Define the hard-gating operator $g_\tau$ elementwise by
+\begin{equation}
+ (g_\tau(x))_k = x_k\,\mathbb{I}(|x_k| \le \tau).
+\end{equation}
+
+\subsection{Nonlinearity}
+$g_\tau$ is nonlinear. In particular, for general $x,y$ and scalar $\alpha$,
+\begin{equation}
+ g_\tau(x+y) \ne g_\tau(x) + g_\tau(y),\qquad g_\tau(\alpha x) \ne \alpha g_\tau(x).
+\end{equation}
+
+This is why it is useful to make the operator explicit before discussing any downstream statistic.
+
+\subsection{Effect on extrema}
+Define $M(x)=\max_k |x_k|$. For any $x$,
+\begin{equation}
+ M(g_\tau(x)) \le \tau.
+\end{equation}
+
+Thus, if a downstream score depends directly on $M(x)$ (or is strongly correlated with it), then gating can bound that score.
+
+\subsection{A simple bound for peak-based proxies}
+If a noise scale estimate $\sigma>0$ is fixed, then the peak proxy $S(x)=M(x)/\sigma$ obeys
+\begin{equation}
+ S(g_\tau(x)) \le \tau/\sigma.
+\end{equation}
+
+The toy experiment in this submission simply instantiates these relationships with explicit arrays and logs.
