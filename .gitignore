@@ -27,6 +27,9 @@ venv/
 astra_output/
 astra_submission_bundle/
 
+# Legacy / local-only snapshot mirrors (not part of the public repo)
+zenodo_snapshot/
+
 # Local Zenodo packaging artifacts (not needed in the GitHub repo)
 zenodo_deposit_*.zip
 
