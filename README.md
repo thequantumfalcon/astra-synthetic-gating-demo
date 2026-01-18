@@ -1,5 +1,7 @@
 # ASTRA synthetic gating demo
 
+[![ci](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/ci.yml?query=branch%3Amain)
+
 ## Scope / Non-Claim Statement
 This repository supports the ASTRA synthetic gating demo: a controlled, fixed-seed toy experiment showing how an amplitude-based gating (preprocessing) step can suppress a short transient prior to downstream scoring. It is not a detector-data result and makes no astrophysical detection claim. No proprietary detector data are included.
 
