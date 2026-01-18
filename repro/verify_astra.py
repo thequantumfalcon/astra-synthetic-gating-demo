@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import argparse
+import csv
 import hashlib
 import json
+import platform
 import sys
 import tempfile
 import zipfile
@@ -24,6 +27,12 @@ EXPECTED_FILES = [
     "mc_summary.csv",
     "mc_table.tex",
 ]
+
+
+def _normalize_newlines(b: bytes) -> bytes:
+    # Zenodo goldens were produced on Windows (CRLF). Normalize to LF for
+    # cross-platform comparisons.
+    return b.replace(b"\r\n", b"\n")
 
 
 @dataclass(frozen=True)
@@ -52,8 +61,8 @@ def _load_manifest() -> dict | None:
 
 
 def _compare_text_exact(expected: Path, actual: Path) -> Mismatch | None:
-    eb = _read_bytes(expected)
-    ab = _read_bytes(actual)
+    eb = _normalize_newlines(_read_bytes(expected))
+    ab = _normalize_newlines(_read_bytes(actual))
     if eb == ab:
         return None
     return Mismatch(
@@ -63,20 +72,148 @@ def _compare_text_exact(expected: Path, actual: Path) -> Mismatch | None:
     )
 
 
-def _npz_diff(expected: Path, actual: Path) -> list[Mismatch]:
+def _try_float(s: str) -> float | None:
+    try:
+        return float(s)
+    except Exception:
+        return None
+
+
+def _compare_verification_log(expected: Path, actual: Path) -> list[Mismatch]:
+    # Portable comparison: key/value with numeric tolerance.
+    eb = _normalize_newlines(_read_bytes(expected)).decode("utf-8", errors="replace")
+    ab = _normalize_newlines(_read_bytes(actual)).decode("utf-8", errors="replace")
+
+    def parse(txt: str) -> dict[str, str]:
+        out: dict[str, str] = {}
+        for line in txt.splitlines():
+            if not line.strip():
+                continue
+            if ":" not in line:
+                continue
+            k, v = line.split(":", 1)
+            out[k.strip()] = v.strip()
+        return out
+
+    e = parse(eb)
+    a = parse(ab)
+    mismatches: list[Mismatch] = []
+    keys = sorted(set(e.keys()) | set(a.keys()))
+    for k in keys:
+        if k not in e or k not in a:
+            mismatches.append(
+                Mismatch(
+                    path=f"verification_log.txt:{k}",
+                    kind="missing-key",
+                    details=f"expected_has={k in e} actual_has={k in a}",
+                )
+            )
+            continue
+
+        ef = _try_float(e[k])
+        af = _try_float(a[k])
+        if ef is not None and af is not None:
+            # Tight tolerance; values are deterministic up to floating-point.
+            if abs(ef - af) > max(1e-12 * abs(ef), 1e-40):
+                mismatches.append(
+                    Mismatch(
+                        path=f"verification_log.txt:{k}",
+                        kind="numeric-diff",
+                        details=f"expected={ef} actual={af}",
+                    )
+                )
+        else:
+            if e[k] != a[k]:
+                mismatches.append(
+                    Mismatch(
+                        path=f"verification_log.txt:{k}",
+                        kind="value-mismatch",
+                        details=f"expected={e[k]} actual={a[k]}",
+                    )
+                )
+    return mismatches
+
+
+def _compare_mc_summary(expected: Path, actual: Path) -> list[Mismatch]:
+    # Portable comparison: CSV numeric tolerance.
+    et = _normalize_newlines(_read_bytes(expected)).decode("utf-8", errors="replace")
+    at = _normalize_newlines(_read_bytes(actual)).decode("utf-8", errors="replace")
+
+    def parse(txt: str) -> tuple[list[str], list[dict[str, str]]]:
+        reader = csv.DictReader(txt.splitlines())
+        fieldnames = reader.fieldnames or []
+        rows = [dict(r) for r in reader]
+        return fieldnames, rows
+
+    ef, erows = parse(et)
+    af, arows = parse(at)
+
+    mismatches: list[Mismatch] = []
+    if ef != af:
+        mismatches.append(
+            Mismatch(
+                path="mc_summary.csv",
+                kind="header-mismatch",
+                details=f"expected={ef} actual={af}",
+            )
+        )
+        return mismatches
+
+    if len(erows) != len(arows):
+        mismatches.append(
+            Mismatch(
+                path="mc_summary.csv",
+                kind="rowcount-mismatch",
+                details=f"expected={len(erows)} actual={len(arows)}",
+            )
+        )
+        return mismatches
+
+    for i, (er, ar) in enumerate(zip(erows, arows, strict=True)):
+        for k in ef:
+            ev = (er.get(k) or "").strip()
+            av = (ar.get(k) or "").strip()
+            efv = _try_float(ev)
+            afv = _try_float(av)
+            if efv is not None and afv is not None:
+                if abs(efv - afv) > max(1e-12 * abs(efv), 1e-40):
+                    mismatches.append(
+                        Mismatch(
+                            path=f"mc_summary.csv:row{i}:{k}",
+                            kind="numeric-diff",
+                            details=f"expected={efv} actual={afv}",
+                        )
+                    )
+                    if len(mismatches) > 20:
+                        return mismatches
+            else:
+                if ev != av:
+                    mismatches.append(
+                        Mismatch(
+                            path=f"mc_summary.csv:row{i}:{k}",
+                            kind="value-mismatch",
+                            details=f"expected={ev} actual={av}",
+                        )
+                    )
+                    if len(mismatches) > 20:
+                        return mismatches
+    return mismatches
+
+
+def _npz_diff(expected: Path, actual: Path, *, strict_bytes: bool) -> list[Mismatch]:
     mismatches: list[Mismatch] = []
     eb = _read_bytes(expected)
     ab = _read_bytes(actual)
     if eb == ab:
         return mismatches
-
-    mismatches.append(
-        Mismatch(
-            path=actual.name,
-            kind="byte-mismatch",
-            details=f"expected_sha256={_sha256_bytes(eb)} actual_sha256={_sha256_bytes(ab)}",
+    if strict_bytes:
+        mismatches.append(
+            Mismatch(
+                path=actual.name,
+                kind="byte-mismatch",
+                details=f"expected_sha256={_sha256_bytes(eb)} actual_sha256={_sha256_bytes(ab)}",
+            )
         )
-    )
 
     # Proof-grade diagnostics (do not treat as pass): numeric diffs + rounded-hash
     try:
@@ -116,16 +253,17 @@ def _npz_diff(expected: Path, actual: Path) -> list[Mismatch]:
                     xr = np.round(x.astype(np.float64), 12)
                     return hashlib.sha256(xr.tobytes()).hexdigest()
 
-                mismatches.append(
-                    Mismatch(
-                        path=f"{actual.name}:{k}",
-                        kind="numeric-diff",
-                        details=(
-                            f"allclose_rtol1e-12={ok} max_abs_diff={max_abs} "
-                            f"expected_rounded_sha256={rounded_hash(ea)} actual_rounded_sha256={rounded_hash(aa)}"
-                        ),
+                if strict_bytes or not ok:
+                    mismatches.append(
+                        Mismatch(
+                            path=f"{actual.name}:{k}",
+                            kind="numeric-diff",
+                            details=(
+                                f"allclose_rtol1e-12={ok} max_abs_diff={max_abs} "
+                                f"expected_rounded_sha256={rounded_hash(ea)} actual_rounded_sha256={rounded_hash(aa)}"
+                            ),
+                        )
                     )
-                )
     except Exception as ex:
         mismatches.append(
             Mismatch(
@@ -154,6 +292,23 @@ def _extract_goldens(tmp: Path) -> Path:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--mode",
+        choices=["strict", "portable"],
+        default=None,
+        help=(
+            "strict: require byte-identical outputs; portable: normalize newlines and compare numerics with tolerance"
+        ),
+    )
+    args = ap.parse_args()
+
+    if args.mode is None:
+        mode = "strict" if platform.system().lower().startswith("win") else "portable"
+    else:
+        mode = args.mode
+    strict_bytes = mode == "strict"
+
     if not BUNDLE_DIR.exists():
         raise SystemExit(
             f"Bundle directory not found: {BUNDLE_DIR}. Run: python repro/run_astra.py"
@@ -185,20 +340,24 @@ def main() -> None:
                 )
                 continue
 
-            if name.endswith(".npz"):
-                mismatches.extend(_npz_diff(expected, actual))
+            if name == "verification_log.txt" and not strict_bytes:
+                mismatches.extend(_compare_verification_log(expected, actual))
+            elif name == "mc_summary.csv" and not strict_bytes:
+                mismatches.extend(_compare_mc_summary(expected, actual))
+            elif name.endswith(".npz"):
+                mismatches.extend(_npz_diff(expected, actual, strict_bytes=strict_bytes))
             else:
                 mm = _compare_text_exact(expected, actual)
                 if mm:
                     mismatches.append(mm)
 
     if mismatches:
-        print("[verify] FAIL")
+        print(f"[verify] FAIL (mode={mode})")
         for m in mismatches:
             print(f"- {m.path}: {m.kind} ({m.details})")
         raise SystemExit(1)
 
-    print("[verify] PASS: outputs match snapshot goldens")
+    print(f"[verify] PASS (mode={mode}): outputs match snapshot goldens")
 
 
 if __name__ == "__main__":

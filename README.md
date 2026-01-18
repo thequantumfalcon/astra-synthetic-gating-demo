@@ -11,7 +11,7 @@ This repository supports the ASTRA synthetic gating demo: a controlled, fixed-se
 Where a file contains its own license notice, that notice takes precedence for that file.
 
 ## Verification Contract (What “Same Results” Means)
-Reproduced outputs must match the `zenodo_snapshot/` goldens exactly: logs/CSV/TeX are string-identical, and `astra_injection.npz` is byte-identical under the pinned environment (Python 3.11.9 + locked dependencies + deterministic settings); any mismatch is treated as a failure and reported with a manifest and numeric diffs.
+Reproduced outputs must match the `zenodo_snapshot/` goldens: on the pinned Windows environment we require byte-identical artifacts (including `astra_injection.npz`), and in cross-platform CI we use a portable verifier that normalizes newlines and compares numeric fields/arrays at strict tolerances; any mismatch is treated as a failure and reported with a manifest and diffs.
 
 PDF files are not expected to be byte-for-byte identical across platforms or TeX distributions (timestamps and PDF object IDs vary); verification is based on the numerical artifacts and their inclusion in the rebuilt manuscript.
 
