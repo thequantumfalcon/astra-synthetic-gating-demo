@@ -1,6 +1,8 @@
 # ASTRA synthetic gating demo
 
-[![ci](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/ci.yml?query=branch%3Amain) [![DOI](https://zenodo.org/badge/1136637164.svg)](https://doi.org/10.5281/zenodo.18287825)
+[![ci](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/ci.yml?query=branch%3Amain)
+[![Software DOI](https://zenodo.org/badge/1136637164.svg)](https://doi.org/10.5281/zenodo.18287825)
+[![Preprint/Evidence DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18276202.svg)](https://doi.org/10.5281/zenodo.18276202)
 
 ## Scope / Non-Claim Statement
 This repository supports the ASTRA synthetic gating demo: a controlled, fixed-seed toy experiment showing how an amplitude-based gating (preprocessing) step can suppress a short transient prior to downstream scoring. It is not a detector-data result and makes no astrophysical detection claim. No proprietary detector data are included.
@@ -11,6 +13,11 @@ This repository supports the ASTRA synthetic gating demo: a controlled, fixed-se
 - Generated reproduction artifacts (e.g., logs, CSV, TeX tables, NPZ outputs produced by the scripts): CC0-1.0 (public domain dedication) unless otherwise noted.
 
 Where a file contains its own license notice, that notice takes precedence for that file.
+
+## Citation / Zenodo
+This project has two Zenodo tracks (both intentionally):
+- **Software releases (GitHub → Zenodo)**: cite the concept DOI `10.5281/zenodo.18287825` (or the specific version DOI such as `10.5281/zenodo.18287910`).
+- **Preprint + release evidence (goldens + audits)**: cite `10.5281/zenodo.18276202` (v5) or the concept DOI `10.5281/zenodo.18276201`.
 
 ## Verification Contract (What “Same Results” Means)
 Reproduced outputs must match the goldens contained in `zenodo_deposit_2026-01-16_v5_final/` using the verifier in `repro/verify_astra.py`.
