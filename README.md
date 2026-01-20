@@ -1,6 +1,8 @@
 # ASTRA synthetic gating demo
 
-[![ci](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/ci.yml?query=branch%3Amain) [![identifier](https://release.org/badge/1136637164.svg)]()
+[![ci](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/ci.yml?query=branch%3Amain)
+[![Software identifier](https://release.org/badge/1136637164.svg)]()
+[![Preprint/Evidence identifier](https://release.org/badge/identifier/)]()
 
 ## Scope / Non-Claim Statement
 This repository supports the ASTRA synthetic gating demo: a controlled, fixed-seed toy experiment showing how an amplitude-based gating (preprocessing) step can suppress a short transient prior to downstream scoring. It is not a detector-data result and makes no astrophysical detection claim. No proprietary detector data are included.
@@ -11,6 +13,11 @@ This repository supports the ASTRA synthetic gating demo: a controlled, fixed-se
 - Generated reproduction artifacts (e.g., logs, CSV, TeX tables, NPZ outputs produced by the scripts): CC0-1.0 (public domain dedication) unless otherwise noted.
 
 Where a file contains its own license notice, that notice takes precedence for that file.
+
+## Citation / release archive
+This project has two release archive tracks (both intentionally):
+- **Software releases (GitHub → release archive)**: cite the concept identifier `` (or the specific version identifier such as ``).
+- **Preprint + release evidence (goldens + audits)**: cite `` (v5) or the concept identifier ``.
 
 ## Verification Contract (What “Same Results” Means)
 Reproduced outputs must match the goldens contained in `release_deposit_2026-01-16_v5_final/` using the verifier in `repro/verify_astra.py`.
