@@ -17,9 +17,6 @@
 
 \input{sections/01_abstract.tex}
 
-\section*{Acknowledgments}
-The author used 
-
 \tableofcontents
 \newpage
 
@@ -29,6 +26,9 @@ The author used
 \input{sections/05_results.tex}
 \input{sections/06_discussion.tex}
 \input{sections/07_repro.tex}
+
+\section*{Acknowledgments}
+The author used 
 
 \input{sections/08_references.tex}
 
@@ -65,6 +65,8 @@ mc_summary.csv not present. Run the proof script with --mc N to generate it.
 }
 
 \subsection{Real/open-data protocol log (optional)}
+\noindent\textbf{Note:} When run in synthetic mode (i.e., without \texttt{--try-open-data}), the protocol script generates pure noise \emph{without} an injected transient. The resulting score ratio near~$1.0$ therefore demonstrates the protocol mechanics, not the gating-suppression effect shown in the main proof script. The gating-suppression demonstration uses \texttt{astra\_proof.py} with an explicit burst injection.
+
 \IfFileExists{real_verify_log.txt}{
 \VerbatimInput[fontsize=\small]{real_verify_log.txt}
 }{

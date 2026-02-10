@@ -88,7 +88,14 @@ def verify_gating_paradox(
     gp: GatingParams,
     seed: int,
     verbose: bool = True,
-) -> dict:
+    return_arrays: bool = False,
+) -> dict | Tuple[dict, np.ndarray, np.ndarray, np.ndarray]:
+    """Run the gating experiment for a single seed.
+
+    When *return_arrays* is True the function also returns (t, data,
+    gated_data) so the caller can write NPZ artifacts without
+    regenerating the same random draw.
+    """
     if verbose:
         print(
             "\n[ASTRA] Running LIGO Engineering-Phase Pipeline Simulation (synthetic)..."
@@ -116,7 +123,7 @@ def verify_gating_paradox(
         print(f"[PROOF] Peak SNR after gating:  {snr_after:.2f}")
         print(f"[PROOF] Gated samples fraction:  {gated_fraction:.6f}")
 
-    return {
+    summary = {
         "mjd": params.mjd,
         "seed": seed,
         "fs_hz": gp.fs_hz,
@@ -132,6 +139,9 @@ def verify_gating_paradox(
         "snr_after": snr_after,
         "gated_fraction": gated_fraction,
     }
+    if return_arrays:
+        return summary, t, data, gated_data
+    return summary
 
 
 def write_artifacts(
@@ -254,15 +264,12 @@ def main(argv: list[str] | None = None) -> None:
 
     h = run_astra_kernel(params)
 
-    rng = np.random.default_rng(int(args.seed))
-    t = _make_timeseries(gp)
-    noise = rng.normal(0.0, gp.noise_std, size=t.shape).astype(np.float64)
-    sig = inject_burst(t, h, params.f_gw_hz, params.tau_s, params.t0_s)
-    data = noise + sig
-    threshold = float(gp.threshold_sigma) * float(np.std(noise))
-    gated_data, _mask = apply_gating(data, threshold)
-
-    summary = verify_gating_paradox(h, params, gp, seed=int(args.seed), verbose=True)
+    # Single generation path: verify_gating_paradox returns both the summary
+    # dict and the arrays, avoiding a redundant second RNG draw.
+    result = verify_gating_paradox(
+        h, params, gp, seed=int(args.seed), verbose=True, return_arrays=True,
+    )
+    summary, t, data, gated_data = result
     out_dir = Path(args.out)
     write_artifacts(out_dir, summary, t=t, data=data, gated_data=gated_data)
 
