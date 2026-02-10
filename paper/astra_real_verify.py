@@ -90,8 +90,10 @@ def normalized_xcorr_max(x: np.ndarray, y: np.ndarray, eps: float = 1e-30) -> fl
     x_std = float(np.std(x))
     y_norm = float(np.linalg.norm(y))
 
-    # Full correlation; for 64s @ 4096 Hz this is large but still manageable.
-    c = np.correlate(x, y, mode="valid")
+    # Use "valid" when template is shorter (normal case); fall back to "full"
+    # when arrays are same length so we still search all lags.
+    corr_mode = "valid" if len(x) != len(y) else "full"
+    c = np.correlate(x, y, mode=corr_mode)
     score = float(np.max(np.abs(c)) / ((x_std + eps) * (y_norm + eps)))
     return score
 
@@ -116,16 +118,33 @@ def apply_energy_gate(
         gated[mask] = 0.0
 
         if tukey_alpha > 0.0:
-            # Apply a short taper around each masked region (very simple).
-            # This is NOT a replica of any specific production pipeline.
+            # Apply a single taper around each contiguous masked region.
+            # This avoids the previous per-sample loop which caused
+            # compounding attenuation when taper windows overlapped.
             pad = 128
-            w = tukey_window(2 * pad + 1, alpha=tukey_alpha)
-            idx = np.where(mask)[0]
-            for i in idx:
-                a = max(0, i - pad)
-                b = min(len(gated) - 1, i + pad)
-                ww = w[(a - (i - pad)) : (2 * pad + 1 - ((i + pad) - b))]
-                gated[a : b + 1] *= ww
+            n = len(gated)
+            # Build a composite taper multiplier (start at 1.0 everywhere)
+            taper = np.ones(n, dtype=np.float64)
+            # Find contiguous masked regions
+            diff = np.diff(mask.astype(np.int8), prepend=0, append=0)
+            starts = np.where(diff == 1)[0]
+            ends = np.where(diff == -1)[0]  # one past last masked
+            for s, e in zip(starts, ends):
+                # Left taper: ramp from 0 to 1 over pad samples before s
+                l_start = max(0, s - pad)
+                l_len = s - l_start
+                if l_len > 0:
+                    half_w = tukey_window(2 * l_len, alpha=tukey_alpha)[:l_len]
+                    taper[l_start:s] = np.minimum(taper[l_start:s], half_w)
+                # Right taper: ramp from 1 to 0 over pad samples after e
+                r_end = min(n, e + pad)
+                r_len = r_end - e
+                if r_len > 0:
+                    half_w = tukey_window(2 * r_len, alpha=tukey_alpha)[r_len:]
+                    taper[e:r_end] = np.minimum(taper[e:r_end], half_w)
+                # Zero inside the masked region
+                taper[s:e] = 0.0
+            gated *= taper
 
     return gated, thr
 
