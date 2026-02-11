@@ -30,6 +30,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+          python -m pip install pytest
+
+      - name: Run unit tests
+        run: python -m pytest tests/ -v
 
       - name: Run ASTRA reproduction
         run: python repro/run_astra.py

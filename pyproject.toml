@@ -1,0 +1,40 @@
+[project]
+name = "astra-synthetic-gating-demo"
+version = "5.0.3"
+description = "Reproducibility package for the ASTRA synthetic gating preprint"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [
+    {name = "ASTRA Contributors", email = "public-release@example.invalid"},
+]
+keywords = ["reproducibility", "synthetic gating", "signal processing", "preprint"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = ["numpy"]
+
+[project.urls]
+Repository = "https://github.com/thequantumfalcon/astra-synthetic-gating-demo"
+
+[build-system]
+requires = ["setuptools>=65"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[tool.setuptools.packages.find]
+where = ["engine"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
