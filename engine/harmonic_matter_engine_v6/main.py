@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import argparse
-import numpy as np
 
 import jax.numpy as jnp
+import numpy as np
 
 from .agents.architect import GenerativeArchitect
 from .agents.luthier import MaterialLuthier
+from .core.jax_sph import LiquidPhysics
 from .core.walrus import WalrusSurrogate
 from .edge.litert_export import LiteRTCompiler
 from .utils import clamp_demo_particle_count, load_config, package_root, save_json
-from .core.jax_sph import LiquidPhysics
 
 
 def _parse_args() -> argparse.Namespace:

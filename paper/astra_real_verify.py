@@ -33,7 +33,6 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Tuple
 
 import numpy as np
 
@@ -102,7 +101,7 @@ def apply_energy_gate(
     strain: np.ndarray,
     gate_k: float,
     tukey_alpha: float,
-) -> Tuple[np.ndarray, float]:
+) -> tuple[np.ndarray, float]:
     """Simple amplitude/energy gating (illustrative).
 
     Uses threshold = gate_k * median(strain^2).
@@ -154,7 +153,7 @@ def fetch_open_data(
     detector: str,
     duration_s: int,
     prefer_fs_hz: int,
-) -> Tuple[Optional[np.ndarray], Optional[float], str]:
+) -> tuple[np.ndarray | None, float | None, str]:
     """Try to fetch public GWOSC open data via gwpy.
 
     Returns (strain, dt, note).
@@ -175,7 +174,7 @@ def fetch_open_data(
 
 def synthetic_strain(
     fs_hz: int, duration_s: int, noise_std: float, seed: int
-) -> Tuple[np.ndarray, float]:
+) -> tuple[np.ndarray, float]:
     rng = np.random.default_rng(seed)
     n = fs_hz * duration_s
     return rng.normal(0.0, noise_std, size=(n,)).astype(np.float64), 1.0 / float(fs_hz)

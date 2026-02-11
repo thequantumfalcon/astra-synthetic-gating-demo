@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Dict, Tuple
 
 import jax
 import jax.numpy as jnp
@@ -16,7 +15,7 @@ class LiquidPhysics:
     NOTE: Neighbor search is simplified to all-to-all within smoothing length.
     """
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         self.h = float(config["physics"]["smoothing_length"])
         self.c0 = float(config["physics"]["speed_of_sound"])
         self.rho0 = float(config["physics"]["rest_density"])
@@ -50,9 +49,9 @@ class LiquidPhysics:
         self,
         pos: jnp.ndarray,
         vel: jnp.ndarray,
-        properties: Dict[str, jnp.ndarray],
+        properties: dict[str, jnp.ndarray],
         dt: float = 0.01,
-    ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+    ) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
         """One integration step using Riemann-SPH-like pressure + TVF shift."""
         diff = pos[:, None, :] - pos[None, :, :]
         dist = jnp.linalg.norm(diff, axis=-1)

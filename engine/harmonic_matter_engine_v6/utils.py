@@ -3,14 +3,14 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 def package_root() -> Path:
     return Path(__file__).resolve().parent
 
 
-def load_config(explicit_path: Optional[str] = None) -> Dict[str, Any]:
+def load_config(explicit_path: str | None = None) -> dict[str, Any]:
     """Load config.json.
 
     Order:

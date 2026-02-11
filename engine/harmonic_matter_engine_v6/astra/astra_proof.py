@@ -4,7 +4,6 @@ import argparse
 import csv
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple
 
 import numpy as np
 
@@ -74,7 +73,7 @@ def inject_burst(
     return sig
 
 
-def apply_gating(data: np.ndarray, threshold: float) -> Tuple[np.ndarray, np.ndarray]:
+def apply_gating(data: np.ndarray, threshold: float) -> tuple[np.ndarray, np.ndarray]:
     """Zero out samples exceeding the gating threshold."""
     mask = np.abs(data) > threshold
     gated = data.copy()
@@ -89,7 +88,7 @@ def verify_gating_paradox(
     seed: int,
     verbose: bool = True,
     return_arrays: bool = False,
-) -> dict | Tuple[dict, np.ndarray, np.ndarray, np.ndarray]:
+) -> dict | tuple[dict, np.ndarray, np.ndarray, np.ndarray]:
     """Run the gating experiment for a single seed.
 
     When *return_arrays* is True the function also returns (t, data,

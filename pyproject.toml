@@ -35,6 +35,14 @@ testpaths = ["tests"]
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+extend-exclude = ["release_deposit_2026-01-16_v5_final/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# LaTeX output f-strings and long help text are better left on one line.
+"engine/harmonic_matter_engine_v6/astra/astra_proof.py" = ["E501"]
+"engine/harmonic_matter_engine_v6/edge/litert_export.py" = ["E501"]
+"paper/astra_proof.py" = ["E501"]
+"repro/verify_astra.py" = ["E501"]

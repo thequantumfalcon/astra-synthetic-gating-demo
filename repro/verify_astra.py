@@ -2,16 +2,14 @@ from __future__ import annotations
 
 import argparse
 import csv
-import re
 import hashlib
 import json
 import platform
-import sys
+import re
 import tempfile
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

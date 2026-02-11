@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import time
-from typing import Tuple
 
 import numpy as np
 
@@ -18,7 +17,7 @@ class WalrusSurrogate:
 
     def generate_initial_state(
         self, prompt: str, particle_count: int
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         print(f"[Walrus] Dreaming physics for: '{prompt}'")
         time.sleep(0.2)
         pos = np.random.uniform(-0.2, 0.2, (particle_count, 3)).astype(np.float32)
