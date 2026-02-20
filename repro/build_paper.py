@@ -30,7 +30,7 @@ def main() -> None:
             "Missing LaTeX tools. Ensure pdflatex and bibtex are installed and on PATH."
         )
 
-    # Canonical sequence from the release archive README.
+    # Canonical LaTeX build sequence.
     _run([pdflatex, "paper.tex"], cwd=BUNDLE_DIR)
     _run([bibtex, "paper"], cwd=BUNDLE_DIR)
     _run([pdflatex, "paper.tex"], cwd=BUNDLE_DIR)

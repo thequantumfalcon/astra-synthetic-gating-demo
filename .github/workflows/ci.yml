@@ -38,10 +38,10 @@ jobs:
       - name: Run ASTRA reproduction
         run: python repro/run_astra.py
 
-      - name: Verify against release archive goldens (portable)
+      - name: Verify generated artifacts
         run: |
-          echo "Running: python repro/verify_astra.py --mode portable"
-          python repro/verify_astra.py --mode portable
+          echo "Running: python repro/verify_astra.py"
+          python repro/verify_astra.py
 
   build-pdf:
     strategy:

@@ -27,12 +27,6 @@ venv/
 astra_output/
 astra_submission_bundle/
 
-# Legacy / local-only snapshot mirrors (not part of the public repo)
-release_snapshot/
-
-# Local release archive packaging artifacts (not needed in the GitHub repo)
-release_deposit_*.zip
-
 # OS
 .DS_Store
 Thumbs.db
