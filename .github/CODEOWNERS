@@ -1,0 +1,32 @@
+# Global default owner
+* @thequantumfalcon
+
+# Repository governance
+.github/CODEOWNERS @thequantumfalcon
+.github/PULL_REQUEST_TEMPLATE.md @thequantumfalcon
+.github/ISSUE_TEMPLATE/bug_report.md @thequantumfalcon
+.github/dependabot.yml @thequantumfalcon
+.github/rulesets/* @thequantumfalcon
+.github/workflows/* @thequantumfalcon
+
+# Security-sensitive top-level files
+SECURITY.md @thequantumfalcon
+LICENSE @thequantumfalcon
+.gitignore @thequantumfalcon
+.pre-commit-config.yaml @thequantumfalcon
+pyproject.toml @thequantumfalcon
+requirements.txt @thequantumfalcon
+requirements-lock.txt @thequantumfalcon
+CITATION.cff @thequantumfalcon
+PUBLIC_RELEASE_CHECKLIST.md @thequantumfalcon
+
+# Source and runtime logic
+engine/** @thequantumfalcon
+repro/** @thequantumfalcon
+tests/** @thequantumfalcon
+
+# Manuscript and published artifacts source
+paper/** @thequantumfalcon
+
+# Security and automation scripts
+scripts/** @thequantumfalcon

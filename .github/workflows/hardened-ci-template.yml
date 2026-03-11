@@ -1,0 +1,48 @@
+name: hardened-ci-template
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  secure-template:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      PR_TITLE: ${{ github.event.pull_request.title || '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Harden runner
+        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde
+        with:
+          egress-policy: audit
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version: "3.11"
+
+      - name: Mask runtime values
+        run: |
+          TEMP_VALUE="example-derived-value"
+          echo "::add-mask::$TEMP_VALUE"
+          printf 'PR title length: %s\n' "${#PR_TITLE}"
+
+      - name: Install zizmor
+        run: python -m pip install --upgrade pip zizmor
+
+      - name: Lint workflows with zizmor
+        run: zizmor .github/workflows/
+
+      - name: Run tests
+        run: python -m pytest -q
