@@ -59,6 +59,10 @@ resource "github_repository_ruleset" "main_protection" {
       required_check {
         context = "generate-sbom"
       }
+
+      required_check {
+        context = "engine-jax-tests"
+      }
     }
   }
 }

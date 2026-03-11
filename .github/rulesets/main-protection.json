@@ -53,6 +53,9 @@
           },
           {
             "context": "generate-sbom"
+          },
+          {
+            "context": "engine-jax-tests"
           }
         ]
       }
