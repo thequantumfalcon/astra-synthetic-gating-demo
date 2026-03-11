@@ -43,6 +43,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+          python -m pip install cyclonedx-bom==4.1.0
 
       - name: Generate reproducible artifacts
         run: python repro/run_astra.py
@@ -54,6 +55,10 @@ jobs:
 
       - name: Build paper PDF
         run: python repro/build_paper.py
+
+      - name: Generate CycloneDX SBOM
+        run: |
+          cyclonedx-py requirements requirements.txt --output-format JSON --output-file sbom.cdx.json
 
       - name: Prepare release archive
         run: |
@@ -70,6 +75,7 @@ jobs:
           path: |
             astra-release-artifacts.tgz
             astra-release-artifacts.tgz.sha256
+            sbom.cdx.json
           if-no-files-found: error
 
       - name: Attest release archive provenance
@@ -86,4 +92,5 @@ jobs:
           gh release upload "$RELEASE_TAG" \
             astra-release-artifacts.tgz \
             astra-release-artifacts.tgz.sha256 \
+            sbom.cdx.json \
             --clobber
