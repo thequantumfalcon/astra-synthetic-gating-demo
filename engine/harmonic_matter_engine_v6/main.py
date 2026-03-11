@@ -52,6 +52,12 @@ def _parse_args() -> argparse.Namespace:
         choices=["none", "dynamic", "float16", "int8"],
         help="Quantization mode for export: none|dynamic|float16|int8 (default: none).",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Seed for deterministic surrogate initialization (default: 0).",
+    )
     return parser.parse_args()
 
 
@@ -73,7 +79,7 @@ def main() -> None:
     if "stiffness" in physics_params:
         config["physics"]["stiffness"] = float(physics_params["stiffness"])
 
-    walrus = WalrusSurrogate()
+    walrus = WalrusSurrogate(seed=int(args.seed))
     requested_N = int(config["physics"]["particle_count"])
     N = clamp_demo_particle_count(requested_N, cap=int(args.particle_cap))
     if N != requested_N:

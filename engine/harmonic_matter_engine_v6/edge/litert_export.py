@@ -3,9 +3,13 @@ from __future__ import annotations
 import os
 import warnings
 from collections.abc import Iterable, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
+import logging
 from pathlib import Path
 from typing import Any
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -28,7 +32,7 @@ def _suppress_stderr():
         finally:
             os.dup2(saved, fd)
             os.close(saved)
-    except Exception:
+    except OSError:
         yield
 
 
@@ -52,7 +56,7 @@ class LiteRTCompiler:
         """
         output_path = Path(output_path)
 
-        print(">>> EDGE: Converting JAX kernel to TensorFlow...")
+        LOGGER.info(">>> EDGE: Converting JAX kernel to TensorFlow...")
         # Reduce noisy third-party logs/warnings (TensorFlow/Keras/JAX2TF).
         # 0=all, 1=filter INFO, 2=filter INFO+WARNING, 3=filter INFO+WARNING+ERROR.
         # We set 3 to suppress known-noisy converter logs; conversion failures still raise exceptions.
@@ -62,13 +66,11 @@ class LiteRTCompiler:
             message=r"In the future `np\.object` will be defined as the corresponding NumPy scalar\.",
             category=FutureWarning,
         )
-        try:
+        with suppress(ImportError):
             from absl import logging as absl_logging
 
             absl_logging.set_verbosity(absl_logging.ERROR)
             absl_logging.set_stderrthreshold("error")
-        except Exception:
-            pass
         try:
             import tensorflow as tf
             from jax.experimental import jax2tf
@@ -91,18 +93,14 @@ class LiteRTCompiler:
             return tf_func(*args)
 
         # Suppress AutoGraph warnings triggered by internal helper functions.
-        try:
+        with suppress(AttributeError):
             tf.get_logger().setLevel("ERROR")
-        except Exception:
-            pass
-        try:
+        with suppress(AttributeError):
             tf.autograph.set_verbosity(0)
-        except Exception:
-            pass
 
         concrete = wrapped.get_concrete_function()
 
-        print(">>> EDGE: Converting to TFLite flatbuffer...")
+        LOGGER.info(">>> EDGE: Converting to TFLite flatbuffer...")
         # Providing a trackable object avoids the deprecated conversion path warning.
         converter = tf.lite.TFLiteConverter.from_concrete_functions([concrete], wrapped)
         converter.target_spec.supported_ops = [
@@ -123,24 +121,24 @@ class LiteRTCompiler:
             base = [tf.convert_to_tensor(x) for x in sample_inputs]
             for _ in range(25):
                 out = []
-                for t in base:
-                    if t.dtype.is_floating:
+                for tensor in base:
+                    if tensor.dtype.is_floating:
                         noise = tf.random.normal(
-                            tf.shape(t), stddev=0.01, dtype=t.dtype
+                            tf.shape(tensor), stddev=0.01, dtype=tensor.dtype
                         )
-                        out.append(t + noise)
+                        out.append(tensor + noise)
                     else:
-                        out.append(t)
+                        out.append(tensor)
                 yield out
 
         if q == "float16":
-            print(
+            LOGGER.info(
                 ">>> EDGE: Enabling float16 quantization (weights/activations where possible)."
             )
             converter.target_spec.supported_types = [tf.float16]
 
         if q == "int8":
-            print(
+            LOGGER.info(
                 ">>> EDGE: Enabling full int8 quantization (uses representative dataset)."
             )
             converter.representative_dataset = _rep_dataset
@@ -151,5 +149,5 @@ class LiteRTCompiler:
             tflite_model = converter.convert()
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_bytes(tflite_model)
-        print(f">>> EDGE: Saved TFLite model: {output_path.resolve()}")
+        LOGGER.info(">>> EDGE: Saved TFLite model: %s", output_path.resolve())
         return tflite_model

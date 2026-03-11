@@ -94,6 +94,10 @@ def main() -> None:
 
     # 2) Assemble bundle for paper build (copy LaTeX tree first).
     shutil.copytree(PAPER_DIR, BUNDLE_DIR)
+    proof_source = ENGINE_DIR / "harmonic_matter_engine_v6" / "astra" / "astra_proof.py"
+    proof_target = BUNDLE_DIR / "engine" / "harmonic_matter_engine_v6" / "astra" / "astra_proof.py"
+    proof_target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(proof_source, proof_target)
 
     # 3) Run MC inside the bundle dir (writes verification_log.txt, astra_injection.npz, mc_*).
     _run(

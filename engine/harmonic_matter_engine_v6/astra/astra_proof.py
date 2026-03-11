@@ -10,6 +10,8 @@ import numpy as np
 
 @dataclass(frozen=True)
 class AstraParams:
+    """Parameter block for the synthetic ASTRA burst prediction demo."""
+
     mjd: int = 59942
     f_spin_hz: float = 100.0
     glitch_mag: float = 1.15e-12
@@ -28,6 +30,8 @@ class AstraParams:
 
 @dataclass(frozen=True)
 class GatingParams:
+    """Signal-generation and gating settings for the synthetic pipeline."""
+
     fs_hz: int = 4096
     duration_s: int = 60
     noise_std: float = 5.0e-23
@@ -150,6 +154,7 @@ def write_artifacts(
     data: np.ndarray,
     gated_data: np.ndarray,
 ) -> None:
+    """Write the single-run verification log and NPZ payload."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Human-readable log
@@ -186,7 +191,7 @@ def _write_mc_artifacts(out_dir: Path, rows: list[dict]) -> None:
     snr_after = np.array([r["snr_after"] for r in rows], dtype=np.float64)
     gated_frac = np.array([r["gated_fraction"] for r in rows], dtype=np.float64)
 
-    def q(x, p):
+    def q(x: np.ndarray, p: float) -> float:
         return float(np.quantile(x, p))
 
     tex = []
@@ -219,6 +224,7 @@ def _write_mc_artifacts(out_dir: Path, rows: list[dict]) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
+    """Run the ASTRA synthetic gating reproducibility workflow."""
     ap = argparse.ArgumentParser(
         description="Project ASTRA reproducibility proof (synthetic gating demo)."
     )

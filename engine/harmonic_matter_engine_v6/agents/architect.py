@@ -1,14 +1,19 @@
 from __future__ import annotations
 
-from ..core.walrus import WalrusSurrogate
+import logging
+
+from harmonic_matter_engine_v6.core.walrus import WalrusSurrogate
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class GenerativeArchitect:
     def __init__(self):
         self.walrus = WalrusSurrogate()
 
-    def design_simulation(self, prompt: str):
-        print(f">>> ARCHITECT: Analyzing '{prompt}' with Walrus Foundation Model...")
+    def design_simulation(self, prompt: str) -> dict[str, float]:
+        LOGGER.info(">>> ARCHITECT: Analyzing '%s' with Walrus Foundation Model...", prompt)
         p = (prompt or "").lower()
         # Minimal prompt-sensitive heuristics (demo-grade).
         if "diamond" in p:

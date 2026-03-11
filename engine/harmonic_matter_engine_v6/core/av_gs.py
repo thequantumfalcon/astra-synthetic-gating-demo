@@ -11,7 +11,7 @@ class AudioVisualGaussianSplatting:
         self.num_splats = int(num_splats)
         self._rng = np.random.default_rng(seed)
 
-    def init_scene(self):
+    def init_scene(self) -> dict[str, np.ndarray]:
         """Initialize the Audio-Visual Scene Graph."""
         return {
             "xyz": self._rng.uniform(-0.5, 0.5, (self.num_splats, 3)).astype(
@@ -37,7 +37,9 @@ class AudioVisualGaussianSplatting:
             ).astype(np.float32),
         }
 
-    def query_acoustic_field(self, splats, query_points: jnp.ndarray):
+    def query_acoustic_field(
+        self, splats: dict[str, np.ndarray], query_points: jnp.ndarray
+    ) -> tuple[jnp.ndarray, jnp.ndarray]:
         """Differentiable query of local acoustic impedance and absorption."""
         xyz = jnp.asarray(splats["xyz"])
         scale = jnp.asarray(splats["scale"])
@@ -50,6 +52,6 @@ class AudioVisualGaussianSplatting:
         weights = jnp.exp(-(dist**2) / (2.0 * sigma**2))
         weights = weights / (jnp.sum(weights, axis=1, keepdims=True) + 1e-6)
 
-        local_Z = weights @ impedance
+        local_impedance = weights @ impedance
         local_alpha = weights @ absorption
-        return local_Z, local_alpha
+        return local_impedance, local_alpha

@@ -6,7 +6,7 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.11"
 authors = [
-    {name = "ASTRA Contributors", email = "public-release@example.invalid"},
+    {name = "ASTRA Contributors"},
 ]
 keywords = ["reproducibility", "synthetic gating", "signal processing", "preprint"]
 classifiers = [
@@ -21,6 +21,10 @@ dependencies = ["numpy"]
 
 [project.urls]
 Repository = "https://github.com/thequantumfalcon/astra-synthetic-gating-demo"
+
+[project.scripts]
+astra = "harmonic_matter_engine_v6.astra.astra_proof:main"
+harmonic-matter-engine-v6 = "harmonic_matter_engine_v6.main:main"
 
 [build-system]
 requires = ["setuptools>=65"]
@@ -43,5 +47,4 @@ select = ["E", "F", "W", "I", "UP"]
 # LaTeX output f-strings and long help text are better left on one line.
 "engine/harmonic_matter_engine_v6/astra/astra_proof.py" = ["E501"]
 "engine/harmonic_matter_engine_v6/edge/litert_export.py" = ["E501"]
-"paper/astra_proof.py" = ["E501"]
 "repro/verify_astra.py" = ["E501"]

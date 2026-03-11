@@ -1,12 +1,12 @@
 cff-version: 1.2.0
 title: "ASTRA synthetic gating demo (preprint + reproducibility package)"
 message: "If you use this artifact bundle, please cite this project using the metadata below."
-type: dataset
+type: software
 authors:
   - name: "ASTRA Contributors"
-    affiliation: "Independent Researcher"
 date-released: "2026-02-10"
 version: "v5.0.3"
+repository-code: "https://github.com/thequantumfalcon/astra-synthetic-gating-demo"
 keywords:
   - reproducibility
   - preprint
