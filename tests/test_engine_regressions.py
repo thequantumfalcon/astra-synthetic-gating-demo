@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import json
 import sys
+import types
 from pathlib import Path
 
 import numpy as np
@@ -12,9 +13,13 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "engine"))
 sys.path.insert(0, str(ROOT))
 
-from harmonic_matter_engine_v6.agents.architect import GenerativeArchitect
-from harmonic_matter_engine_v6.core.walrus import WalrusSurrogate
-import repro.run_astra as run_astra
+GenerativeArchitect = importlib.import_module(
+    "harmonic_matter_engine_v6.agents.architect"
+).GenerativeArchitect
+WalrusSurrogate = importlib.import_module(
+    "harmonic_matter_engine_v6.core.walrus"
+).WalrusSurrogate
+run_astra = importlib.import_module("repro.run_astra")
 
 
 def _demo_config() -> dict[str, dict[str, float]]:
@@ -106,9 +111,9 @@ class TestAudioVisualGaussianSplatting:
         splats = AudioVisualGaussianSplatting(num_splats=6, seed=0).init_scene()
         query_points = jnp.asarray([[0.0, 0.0, 0.0], [0.2, -0.1, 0.1]], dtype=jnp.float32)
 
-        impedance, absorption = AudioVisualGaussianSplatting(num_splats=6, seed=0).query_acoustic_field(
-            splats, query_points
-        )
+        impedance, absorption = AudioVisualGaussianSplatting(
+            num_splats=6, seed=0
+        ).query_acoustic_field(splats, query_points)
 
         assert impedance.shape == (2, 1)
         assert absorption.shape == (2, 1)
@@ -136,6 +141,123 @@ class TestLiquidPhysics:
         assert new_pos.shape == pos.shape
         assert new_vel.shape == vel.shape
         assert rho.shape == (2,)
+
+
+class TestLiteRTCompiler:
+    @staticmethod
+    def _install_fake_tf_stack(monkeypatch):
+        holder: dict[str, object] = {}
+
+        class FakeDType:
+            def __init__(self, is_floating: bool = True):
+                self.is_floating = is_floating
+
+        class FakeTensor:
+            def __init__(self, value, dtype: FakeDType | None = None):
+                array = np.asarray(value)
+                self.value = array
+                self.shape = array.shape
+                self.dtype = dtype or FakeDType()
+
+            def __add__(self, other):
+                _ = other
+                return FakeTensor(self.value, self.dtype)
+
+        class FakeTensorSpec:
+            def __init__(self, shape, dtype):
+                self.shape = shape
+                self.dtype = dtype
+
+        class FakeWrapped:
+            def __init__(self, func, input_signature):
+                self.func = func
+                self.input_signature = input_signature
+
+            def __call__(self, *args):
+                return self.func(*args)
+
+            def get_concrete_function(self):
+                return object()
+
+        class FakeConverter:
+            def __init__(self):
+                self.target_spec = types.SimpleNamespace(
+                    supported_ops=None, supported_types=None
+                )
+                self.optimizations = None
+                self.representative_dataset = None
+                self.inference_input_type = None
+                self.inference_output_type = None
+
+            def convert(self):
+                return b"fake-tflite-model"
+
+        class FakeConverterFactory:
+            @staticmethod
+            def from_concrete_functions(functions, wrapped):
+                _ = functions, wrapped
+                holder["converter"] = FakeConverter()
+                return holder["converter"]
+
+        fake_tf = types.ModuleType("tensorflow")
+        fake_tf.TensorSpec = FakeTensorSpec
+        fake_tf.float16 = "float16"
+        fake_tf.int8 = "int8"
+        fake_tf.convert_to_tensor = lambda value: (
+            value if isinstance(value, FakeTensor) else FakeTensor(value)
+        )
+        fake_tf.function = lambda input_signature=None: (
+            lambda func: FakeWrapped(func, input_signature)
+        )
+        fake_tf.shape = lambda tensor: tensor.shape
+        fake_tf.random = types.SimpleNamespace(
+            normal=lambda shape, stddev, dtype: FakeTensor(
+                np.zeros(shape, dtype=np.float32), dtype
+            )
+        )
+        fake_tf.get_logger = lambda: types.SimpleNamespace(setLevel=lambda level: None)
+        fake_tf.autograph = types.SimpleNamespace(
+            set_verbosity=lambda level: None
+        )
+        fake_tf.lite = types.SimpleNamespace(
+            TFLiteConverter=FakeConverterFactory,
+            OpsSet=types.SimpleNamespace(
+                TFLITE_BUILTINS="TFLITE_BUILTINS", SELECT_TF_OPS="SELECT_TF_OPS"
+            ),
+            Optimize=types.SimpleNamespace(DEFAULT="DEFAULT"),
+        )
+
+        fake_jax = types.ModuleType("jax")
+        fake_experimental = types.ModuleType("jax.experimental")
+        fake_experimental.jax2tf = types.SimpleNamespace(
+            convert=lambda func, with_gradient=False: func
+        )
+        fake_jax.experimental = fake_experimental
+
+        monkeypatch.setitem(sys.modules, "tensorflow", fake_tf)
+        monkeypatch.setitem(sys.modules, "jax", fake_jax)
+        monkeypatch.setitem(sys.modules, "jax.experimental", fake_experimental)
+        return holder
+
+    def test_convert_jax_to_tflite_writes_output(self, monkeypatch, tmp_path):
+        holder = self._install_fake_tf_stack(monkeypatch)
+        LiteRTCompiler = importlib.import_module(
+            "harmonic_matter_engine_v6.edge.litert_export"
+        ).LiteRTCompiler
+
+        compiler = LiteRTCompiler()
+        output_path = tmp_path / "engine.tflite"
+
+        model = compiler.convert_jax_to_tflite(
+            lambda tensor: tensor,
+            [np.ones((2, 3), dtype=np.float32)],
+            output_path=output_path,
+            quantization="float16",
+        )
+
+        assert model == b"fake-tflite-model"
+        assert output_path.read_bytes() == b"fake-tflite-model"
+        assert holder["converter"].target_spec.supported_types == ["float16"]
 
 
 class TestRunAstraHelpers:
@@ -187,7 +309,13 @@ class TestRunAstraHelpers:
 
         run_astra.main()
 
-        copied_proof = bundle_dir / "engine" / "harmonic_matter_engine_v6" / "astra" / "astra_proof.py"
+        copied_proof = (
+            bundle_dir
+            / "engine"
+            / "harmonic_matter_engine_v6"
+            / "astra"
+            / "astra_proof.py"
+        )
         assert copied_proof.read_text(encoding="utf-8") == "print('proof')\n"
         assert len(calls) == 2
         assert calls[0][2] == "harmonic_matter_engine_v6.astra"

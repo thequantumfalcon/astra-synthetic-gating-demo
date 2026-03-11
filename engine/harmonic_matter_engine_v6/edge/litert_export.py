@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+import logging
 import os
 import warnings
 from collections.abc import Iterable, Sequence
 from contextlib import contextmanager, suppress
-import logging
 from pathlib import Path
 from typing import Any
-
 
 LOGGER = logging.getLogger(__name__)
 
