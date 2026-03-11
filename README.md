@@ -42,6 +42,8 @@ PDF files are not expected to be byte-for-byte identical across platforms or TeX
 
 CI (GitHub Actions) runs reproduction + verification on both Windows and Linux. The paper PDF is built in CI on Linux as a smoke test, but is not verified byte-for-byte.
 
+Published GitHub releases attach a reproducibility bundle: `astra-release-artifacts.tgz`, its `astra-release-artifacts.tgz.sha256` checksum, and a CycloneDX SBOM (`sbom.cdx.json`).
+
 ## Directory structure
 
 - `engine/` — MIT-licensed Python package source (`harmonic_matter_engine_v6`), including the ASTRA entrypoint (`python -m harmonic_matter_engine_v6.astra`).

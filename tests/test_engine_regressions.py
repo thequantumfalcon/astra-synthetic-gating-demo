@@ -139,16 +139,17 @@ class TestLiquidPhysics:
 
 
 class TestRunAstraHelpers:
-    def test_deterministic_env_adds_engine_path(self, monkeypatch):
+    def test_deterministic_env_adds_engine_path(self, monkeypatch, tmp_path):
+        engine_dir = tmp_path / "engine"
         monkeypatch.setenv("PYTHONPATH", "existing-path")
-        monkeypatch.setattr(run_astra, "ENGINE_DIR", Path("C:/tmp/engine"))
+        monkeypatch.setattr(run_astra, "ENGINE_DIR", engine_dir)
 
         env = run_astra._deterministic_env()
 
         assert env["PYTHONHASHSEED"] == "0"
         assert env["OMP_NUM_THREADS"] == "1"
         python_path_entries = env["PYTHONPATH"].split(run_astra.os.pathsep)
-        assert Path(python_path_entries[0]) == Path("C:/tmp/engine")
+        assert Path(python_path_entries[0]) == engine_dir
 
     def test_write_manifest_creates_expected_payload(self, tmp_path):
         run_astra._write_manifest(tmp_path)
