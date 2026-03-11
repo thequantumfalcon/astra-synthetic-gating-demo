@@ -5,7 +5,6 @@ from typing import Any
 
 from harmonic_matter_engine_v6.core.av_gs import AudioVisualGaussianSplatting
 
-
 LOGGER = logging.getLogger(__name__)
 
 
