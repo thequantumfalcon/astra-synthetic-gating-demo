@@ -8,6 +8,31 @@ pass() { printf 'PASS  %s\n' "$1"; }
 warn() { printf 'WARN  %s\n' "$1"; }
 fail() { printf 'FAIL  %s\n' "$1"; }
 
+find_gh() {
+  if command -v gh >/dev/null 2>&1; then
+    command -v gh
+    return 0
+  fi
+
+  if command -v gh.exe >/dev/null 2>&1; then
+    command -v gh.exe
+    return 0
+  fi
+
+  local candidate
+  for candidate in \
+    "/c/Program Files/GitHub CLI/gh.exe" \
+    "/mnt/c/Program Files/GitHub CLI/gh.exe" \
+    "/c/Users/${USERNAME:-}/AppData/Local/Programs/GitHub CLI/gh.exe"; do
+    if [[ -x "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
 check_file() {
   local path="$1"
   local label="$2"
@@ -65,9 +90,9 @@ fi
 
 check_no_unpinned_actions
 
-if command -v gh >/dev/null 2>&1; then
-  if gh auth status >/dev/null 2>&1; then
-    repo_json="$(gh repo view --json nameWithOwner,defaultBranchRef 2>/dev/null || true)"
+if GH_BIN="$(find_gh 2>/dev/null)"; then
+  if "$GH_BIN" auth status >/dev/null 2>&1; then
+    repo_json="$("$GH_BIN" repo view --json nameWithOwner,defaultBranchRef 2>/dev/null || true)"
     if [[ -n "$repo_json" ]]; then
       pass "GitHub CLI authenticated for remote security checks"
     else
@@ -77,5 +102,5 @@ if command -v gh >/dev/null 2>&1; then
     warn "GitHub CLI available but not authenticated"
   fi
 else
-  warn "GitHub CLI not available; branch protection and repo settings not checked remotely"
+  warn "GitHub CLI not available from this shell; branch protection and repo settings not checked remotely"
 fi
