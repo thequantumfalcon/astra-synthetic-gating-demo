@@ -6,7 +6,6 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 
-
 POLY6_COEFFICIENT = 315.0
 SPIKY_GRAD_COEFFICIENT = -45.0
 PRESSURE_EXPONENT = 7.0

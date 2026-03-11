@@ -32,6 +32,10 @@ gh api /repos/thequantumfalcon/astra-synthetic-gating-demo/rulesets
 
 Use `ops/github-rulesets.tf` with the GitHub provider and import or apply it against `thequantumfalcon/astra-synthetic-gating-demo`.
 
+## Solo-maintainer mode
+
+The checked-in `main-protection` payload currently reflects a solo-maintainer workflow: pull requests are still required, but code-owner review, last-push approval, and the required approval count are disabled so a single maintainer can merge after status checks pass.
+
 ## Additional repository settings outside rulesets
 
 These settings should also be enabled in the GitHub UI or through repository settings automation:

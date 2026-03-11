@@ -4,7 +4,6 @@ import logging
 
 from harmonic_matter_engine_v6.core.walrus import WalrusSurrogate
 
-
 LOGGER = logging.getLogger(__name__)
 
 
