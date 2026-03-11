@@ -58,7 +58,7 @@ jobs:
 
       - name: Generate CycloneDX SBOM
         run: |
-          cyclonedx-py requirements requirements.txt --output-format JSON --output-file sbom.cdx.json
+          cyclonedx-py requirements requirements.txt --output-format JSON --outfile sbom.cdx.json
 
       - name: Prepare release archive
         run: |
