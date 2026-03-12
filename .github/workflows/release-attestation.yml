@@ -83,6 +83,22 @@ jobs:
         with:
           subject-path: astra-release-artifacts.tgz
 
+      - name: Export in-toto provenance bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh attestation download astra-release-artifacts.tgz --repo "$GITHUB_REPOSITORY"
+          provenance_bundle=$(find . -maxdepth 1 -name 'sha256*.jsonl' -print -quit)
+          test -n "$provenance_bundle"
+          mv "$provenance_bundle" astra-release-artifacts.tgz.intoto.jsonl
+
+      - name: Upload provenance bundle artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: astra-release-provenance
+          path: astra-release-artifacts.tgz.intoto.jsonl
+          if-no-files-found: error
+
       - name: Upload attested archive to GitHub Release
         if: github.event_name == 'release' || inputs.release_tag != ''
         env:
@@ -92,5 +108,6 @@ jobs:
           gh release upload "$RELEASE_TAG" \
             astra-release-artifacts.tgz \
             astra-release-artifacts.tgz.sha256 \
+            astra-release-artifacts.tgz.intoto.jsonl \
             sbom.cdx.json \
             --clobber
