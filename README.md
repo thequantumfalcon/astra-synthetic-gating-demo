@@ -8,6 +8,7 @@
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/thequantumfalcon/astra-synthetic-gating-demo/badge)](https://securityscorecards.dev/viewer/?uri=github.com/thequantumfalcon/astra-synthetic-gating-demo)
 [![Dependency Review](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/dependency-review.yml)
 [![SBOM](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/sbom.yml/badge.svg)](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/sbom.yml)
+[![ClusterFuzzLite PR fuzzing](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/cflite_pr.yml/badge.svg)](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/cflite_pr.yml)
 [![Release Attestation](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/release-attestation.yml/badge.svg)](https://github.com/thequantumfalcon/astra-synthetic-gating-demo/actions/workflows/release-attestation.yml)
 [![Security Policy](https://img.shields.io/badge/security-policy-brightgreen)](SECURITY.md)
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot)](.github/dependabot.yml)
@@ -42,7 +43,9 @@ PDF files are not expected to be byte-for-byte identical across platforms or TeX
 
 CI (GitHub Actions) runs reproduction + verification on both Windows and Linux. The paper PDF is built in CI on Linux as a smoke test, but is not verified byte-for-byte.
 
-Published GitHub releases attach a reproducibility bundle: `astra-release-artifacts.tgz`, its `astra-release-artifacts.tgz.sha256` checksum, and a CycloneDX SBOM (`sbom.cdx.json`).
+Published GitHub releases attach a reproducibility bundle: `astra-release-artifacts.tgz`, its `astra-release-artifacts.tgz.sha256` checksum, a CycloneDX SBOM (`sbom.cdx.json`), and an in-toto provenance bundle (`astra-release-artifacts.tgz.intoto.jsonl`).
+
+Pull requests are also fuzzed with ClusterFuzzLite against the synthetic ASTRA signal path so malformed inputs and edge-case parameter combinations are exercised before merge.
 
 ## Directory structure
 
