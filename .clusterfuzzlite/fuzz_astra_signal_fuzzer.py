@@ -2,83 +2,88 @@
 
 from __future__ import annotations
 
+import json
 import math
 import sys
+import tempfile
+from pathlib import Path
+from typing import Any
 
 import atheris
-import numpy as np
 
 with atheris.instrument_imports():
-    from harmonic_matter_engine_v6.astra.astra_proof import (
-        AstraParams,
-        GatingParams,
-        _make_timeseries,
-        apply_gating,
-        inject_burst,
-        verify_gating_paradox,
-    )
+    from harmonic_matter_engine_v6.utils import clamp_demo_particle_count, load_config, save_json
 
 
-def _bounded_float(value: float, lower: float, upper: float, fallback: float) -> float:
-    if not math.isfinite(value):
-        return fallback
-    return min(max(value, lower), upper)
+def _consume_text(provider: atheris.FuzzedDataProvider, max_len: int = 32) -> str:
+    size = provider.ConsumeIntInRange(0, max_len)
+    return provider.ConsumeBytes(size).decode("utf-8", errors="ignore")
+
+
+def _consume_json_scalar(provider: atheris.FuzzedDataProvider) -> Any:
+    kind = provider.ConsumeIntInRange(0, 5)
+    if kind == 0:
+        return None
+    if kind == 1:
+        return bool(provider.ConsumeIntInRange(0, 1))
+    if kind == 2:
+        return provider.ConsumeIntInRange(-10_000, 10_000)
+    if kind == 3:
+        value = provider.ConsumeFloat()
+        if not math.isfinite(value):
+            return 0.0
+        return max(min(value, 1.0e6), -1.0e6)
+    if kind == 4:
+        return _consume_text(provider)
+    return provider.ConsumeIntInRange(-1_000_000, 1_000_000)
+
+
+def _consume_json_value(provider: atheris.FuzzedDataProvider, depth: int = 0) -> Any:
+    if depth >= 2:
+        return _consume_json_scalar(provider)
+
+    kind = provider.ConsumeIntInRange(0, 2)
+    if kind == 0:
+        return _consume_json_scalar(provider)
+    if kind == 1:
+        length = provider.ConsumeIntInRange(0, 4)
+        return [_consume_json_value(provider, depth + 1) for _ in range(length)]
+
+    length = provider.ConsumeIntInRange(0, 4)
+    out: dict[str, Any] = {}
+    for _ in range(length):
+        out[_consume_text(provider, 16)] = _consume_json_value(provider, depth + 1)
+    return out
 
 
 def TestOneInput(data: bytes) -> None:
     provider = atheris.FuzzedDataProvider(data)
 
-    fs_hz = provider.ConsumeIntInRange(8, 1024)
-    duration_s = provider.ConsumeIntInRange(1, 8)
-    noise_std = _bounded_float(provider.ConsumeFloat(), 0.0, 1.0e-18, 5.0e-23)
-    threshold_sigma = _bounded_float(provider.ConsumeFloat(), 0.0, 25.0, 8.0)
+    particle_count = provider.ConsumeIntInRange(-10_000, 10_000)
+    cap = provider.ConsumeIntInRange(0, 4096)
+    clamped = clamp_demo_particle_count(particle_count, cap=cap)
+    if cap >= 0 and clamped > cap:
+        raise RuntimeError("clamp_demo_particle_count exceeded cap")
+    if particle_count <= cap and clamped != particle_count:
+        raise RuntimeError("clamp_demo_particle_count changed in-range input")
 
-    gp = GatingParams(
-        fs_hz=fs_hz,
-        duration_s=duration_s,
-        noise_std=noise_std,
-        threshold_sigma=threshold_sigma,
-    )
-    t = _make_timeseries(gp)
+    payload = _consume_json_value(provider)
 
-    h0 = _bounded_float(provider.ConsumeFloat(), 0.0, 1.0e-18, 1.0e-21)
-    f_hz = _bounded_float(provider.ConsumeFloat(), 0.0, fs_hz / 2.0, 200.0)
-    tau_s = _bounded_float(provider.ConsumeFloat(), 1.0e-4, 5.0, 0.3)
-    t0_s = _bounded_float(provider.ConsumeFloat(), 0.0, duration_s, duration_s / 2.0)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_path = Path(tmp_dir)
+        config_path = tmp_path / "config.json"
+        save_json(config_path, payload)
+        loaded = load_config(str(config_path))
 
-    signal = inject_burst(t, h0=h0, f_hz=f_hz, tau_s=tau_s, t0_s=t0_s)
-    threshold = _bounded_float(provider.ConsumeFloat(), 0.0, 10.0, 1.0)
-    gated_signal, mask = apply_gating(signal, threshold=threshold)
+        if json.dumps(loaded, sort_keys=True) != json.dumps(payload, sort_keys=True):
+            raise RuntimeError("load_config/save_json round-trip changed payload")
 
-    if signal.shape != gated_signal.shape or mask.shape != signal.shape:
-        raise RuntimeError("Gating changed array shapes")
-
-    params = AstraParams(
-        mjd=provider.ConsumeIntInRange(50000, 70000),
-        f_spin_hz=_bounded_float(provider.ConsumeFloat(), 1.0, 1000.0, 100.0),
-        glitch_mag=_bounded_float(provider.ConsumeFloat(), 0.0, 1.0e-8, 1.15e-12),
-        gv=_bounded_float(provider.ConsumeFloat(), 0.0, 2.0, 0.35),
-        E_vac_erg=_bounded_float(provider.ConsumeFloat(), 1.0, 1.0e40, 4.0e33),
-        dist_cm=_bounded_float(provider.ConsumeFloat(), 1.0, 1.0e30, 1.3 * 3.086e21),
-        h0_refined=h0,
-        f_gw_hz=f_hz,
-        tau_s=tau_s,
-        t0_s=t0_s,
-    )
-    summary = verify_gating_paradox(
-        h_signal=h0,
-        params=params,
-        gp=gp,
-        seed=provider.ConsumeIntInRange(0, 2**31 - 1),
-        verbose=False,
-    )
-
-    if not np.isfinite(summary["snr_before"]):
-        raise RuntimeError("Non-finite snr_before")
-    if not np.isfinite(summary["snr_after"]):
-        raise RuntimeError("Non-finite snr_after")
-    if not 0.0 <= summary["gated_fraction"] <= 1.0:
-        raise RuntimeError("gated_fraction out of range")
+        malformed_path = tmp_path / "malformed.json"
+        malformed_path.write_text(_consume_text(provider, 128), encoding="utf-8")
+        try:
+            load_config(str(malformed_path))
+        except (json.JSONDecodeError, OSError):
+            pass
 
 
 def main() -> None:

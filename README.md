@@ -45,7 +45,7 @@ CI (GitHub Actions) runs reproduction + verification on both Windows and Linux. 
 
 Published GitHub releases attach a reproducibility bundle: `astra-release-artifacts.tgz`, its `astra-release-artifacts.tgz.sha256` checksum, a CycloneDX SBOM (`sbom.cdx.json`), and an in-toto provenance bundle (`astra-release-artifacts.tgz.intoto.jsonl`).
 
-Pull requests are also fuzzed with ClusterFuzzLite against the synthetic ASTRA signal path so malformed inputs and edge-case parameter combinations are exercised before merge.
+Pull requests are also fuzzed with ClusterFuzzLite against the repository's JSON and configuration utility path so malformed inputs and edge-case payloads are exercised before merge.
 
 ## Directory structure
 
