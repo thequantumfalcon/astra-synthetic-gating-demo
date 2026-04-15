@@ -69,7 +69,7 @@ jobs:
           sha256sum astra-release-artifacts.tgz > astra-release-artifacts.tgz.sha256
 
       - name: Upload release artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: astra-release-artifacts
           path: |
@@ -93,7 +93,7 @@ jobs:
           mv "$provenance_bundle" astra-release-artifacts.tgz.intoto.jsonl
 
       - name: Upload provenance bundle artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: astra-release-provenance
           path: astra-release-artifacts.tgz.intoto.jsonl
