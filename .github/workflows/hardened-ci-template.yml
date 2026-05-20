@@ -23,7 +23,7 @@ jobs:
           persist-credentials: false
 
       - name: Harden runner
-        uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5
         with:
           egress-policy: audit
 
