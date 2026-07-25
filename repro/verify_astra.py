@@ -172,7 +172,10 @@ def main() -> None:
         nv = manifest.get("numpy_version")
         print(f"[verify] manifest: python={pv} numpy={nv}")
 
-    print(f"[verify] mode: {mode}")
+    if mode == "strict":
+        print("[verify] mode: strict (accepted for compatibility; identical checks to portable)")
+    else:
+        print(f"[verify] mode: {mode}")
     print("[verify] local consistency checks")
 
     errors: list[str] = []
@@ -194,6 +197,9 @@ def main() -> None:
         raise SystemExit(1)
 
     print(f"[verify] PASS (mode={mode}): artifact bundle is internally consistent")
+    print(
+        "[verify] note: consistency/invariant checks only; no comparison against a stored reference"
+    )
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ resource "github_repository_ruleset" "main_protection" {
 
   conditions {
     ref_name {
-      include = ["~DEFAULT_BRANCH", "refs/heads/main"]
+      include = ["refs/heads/main"]
       exclude = []
     }
   }

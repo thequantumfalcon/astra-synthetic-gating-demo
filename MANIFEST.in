@@ -1,0 +1,6 @@
+# The sdist is described as a reproducibility package, so ship what reproduces it.
+include LICENSE README.md CHANGELOG.md CITATION.cff
+include requirements.txt requirements-lock.txt
+recursive-include repro *.py
+recursive-include paper *.tex *.bib *.csv *.txt *.py
+recursive-include tests *.py
