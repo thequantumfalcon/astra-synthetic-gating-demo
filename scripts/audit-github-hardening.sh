@@ -98,26 +98,30 @@ if GH_BIN="$(find_gh 2>/dev/null)"; then
     if [[ -z "$REPO" ]]; then
       warn "GitHub CLI available but repo metadata query failed"
     else
-      # Open Dependabot alerts.
-      alerts="$("$GH_BIN" api "repos/$REPO/dependabot/alerts" \
-        --jq '[.[] | select(.state=="open")] | length' 2>/dev/null || echo "?")"
-      if [[ "$alerts" == "0" ]]; then
-        pass "No open Dependabot alerts"
-      elif [[ "$alerts" == "?" ]]; then
-        warn "Could not query Dependabot alerts (token may lack the security_events scope)"
+      # Open Dependabot alerts. A token without the security_events scope gets a
+      # 403 whose body lands on stdout, so require a numeric answer before judging.
+      if alerts="$("$GH_BIN" api "repos/$REPO/dependabot/alerts" \
+           --jq '[.[] | select(.state=="open")] | length' 2>/dev/null)" \
+         && [[ "$alerts" =~ ^[0-9]+$ ]]; then
+        if [[ "$alerts" -eq 0 ]]; then
+          pass "No open Dependabot alerts"
+        else
+          fail "$alerts open Dependabot alert(s)"
+        fi
       else
-        fail "$alerts open Dependabot alert(s)"
+        warn "Could not query Dependabot alerts (token lacks the security_events scope)"
       fi
 
       # Private vulnerability reporting, which SECURITY.md tells reporters to use.
-      pvr="$("$GH_BIN" api "repos/$REPO/private-vulnerability-reporting" \
-        --jq .enabled 2>/dev/null || echo "?")"
-      if [[ "$pvr" == "true" ]]; then
-        pass "Private vulnerability reporting enabled"
-      elif [[ "$pvr" == "?" ]]; then
-        warn "Could not query private vulnerability reporting"
+      if pvr="$("$GH_BIN" api "repos/$REPO/private-vulnerability-reporting" \
+           --jq .enabled 2>/dev/null)" && [[ "$pvr" == "true" || "$pvr" == "false" ]]; then
+        if [[ "$pvr" == "true" ]]; then
+          pass "Private vulnerability reporting enabled"
+        else
+          fail "Private vulnerability reporting disabled but SECURITY.md directs reporters to it"
+        fi
       else
-        fail "Private vulnerability reporting disabled but SECURITY.md directs reporters to it"
+        warn "Could not query private vulnerability reporting"
       fi
 
       # The live ruleset must still require checks that exist.

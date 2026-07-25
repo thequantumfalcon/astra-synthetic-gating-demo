@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Lets the hardening audit actually read Dependabot alerts rather than warn.
+      security-events: read
 
     steps:
       - name: Checkout repository
