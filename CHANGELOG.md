@@ -2,6 +2,15 @@
 
 All notable changes to this reproducibility package are documented in this file.
 
+## [6.1.2] - 2026-07-25
+
+### Fixed
+- The release archive carried LaTeX build byproducts (`paper.log`, `.aux`, `.out`,
+  `.bbl`, `.blg`). TeX writes absolute font and input paths into those files, so a
+  bundle produced locally embedded the builder's home directory. They are now stripped
+  before the archive is created; `paper.pdf` and every data artifact are unaffected.
+  Published archives were built in CI and contained only the runner's own paths.
+
 ## [6.1.1] - 2026-07-25
 
 ### Fixed

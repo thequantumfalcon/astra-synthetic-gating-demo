@@ -63,6 +63,13 @@ jobs:
           mkdir -p release-artifacts
           cp -r astra_output release-artifacts/astra_output
           cp -r astra_submission_bundle release-artifacts/astra_submission_bundle
+          # LaTeX build byproducts embed the absolute paths of the machine that ran
+          # the build, so they would disclose a home directory for anyone producing a
+          # bundle locally. They are also of no use to someone reproducing the work.
+          find release-artifacts \( \
+            -name '*.log' -o -name '*.aux' -o -name '*.out' -o -name '*.toc' \
+            -o -name '*.blg' -o -name '*.bbl' -o -name '*.fls' -o -name '*.fdb_latexmk' \
+            -o -name '*.synctex.gz' \) -type f -delete
           tar -czf astra-release-artifacts.tgz release-artifacts
           sha256sum astra-release-artifacts.tgz > astra-release-artifacts.tgz.sha256
 
