@@ -14,4 +14,4 @@
 # Build tooling (pip, setuptools) is deliberately not pinned here: CI upgrades
 # pip to the current release, and pinning older build tools in this file only
 # produced advisories against packages that never enter the demo runtime.
-numpy==2.4.1
+numpy==2.4.6
