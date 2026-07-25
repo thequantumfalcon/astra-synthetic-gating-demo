@@ -14,13 +14,13 @@ import numpy as np
 # Make engine importable without pip install
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "engine"))
 
-from harmonic_matter_engine_v6.astra.astra_proof import (
+from astra.astra_proof import (
     AstraParams,
     GatingParams,
     _make_timeseries,
     apply_gating,
     inject_burst,
-    verify_gating_paradox,
+    run_gating_trial,
 )
 
 # astra_real_verify lives in paper/, not in a package.
@@ -129,11 +129,11 @@ class TestMakeTimeseries:
 
 
 # ---------------------------------------------------------------------------
-# astra_proof.py — verify_gating_paradox
+# astra_proof.py — run_gating_trial
 # ---------------------------------------------------------------------------
-class TestVerifyGatingParadox:
+class TestRunGatingTrial:
     def test_returns_dict(self):
-        result = verify_gating_paradox(
+        result = run_gating_trial(
             1e-21, AstraParams(), GatingParams(), seed=0, verbose=False
         )
         assert isinstance(result, dict)
@@ -142,7 +142,7 @@ class TestVerifyGatingParadox:
         assert "gated_fraction" in result
 
     def test_return_arrays(self):
-        result = verify_gating_paradox(
+        result = run_gating_trial(
             1e-21, AstraParams(), GatingParams(), seed=0,
             verbose=False, return_arrays=True,
         )
@@ -151,19 +151,19 @@ class TestVerifyGatingParadox:
         assert t.shape == data.shape == gated_data.shape
 
     def test_deterministic_across_calls(self):
-        r1 = verify_gating_paradox(
+        r1 = run_gating_trial(
             1e-21, AstraParams(), GatingParams(), seed=42, verbose=False
         )
-        r2 = verify_gating_paradox(
+        r2 = run_gating_trial(
             1e-21, AstraParams(), GatingParams(), seed=42, verbose=False
         )
         assert r1 == r2
 
     def test_different_seeds_differ(self):
-        r1 = verify_gating_paradox(
+        r1 = run_gating_trial(
             1e-21, AstraParams(), GatingParams(), seed=0, verbose=False
         )
-        r2 = verify_gating_paradox(
+        r2 = run_gating_trial(
             1e-21, AstraParams(), GatingParams(), seed=99, verbose=False
         )
         assert r1["snr_before"] != r2["snr_before"]

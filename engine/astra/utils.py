@@ -11,17 +11,17 @@ def package_root() -> Path:
 
 
 def load_config(explicit_path: str | None = None) -> dict[str, Any]:
-    """Load config.json.
+    """Load a JSON config file.
 
     Order:
     1) explicit_path (if provided)
-    2) env var HME_CONFIG
-    3) bundled harmonic_matter_engine_v6/config.json
+    2) env var ASTRA_CONFIG
+    3) config.json next to this package
     """
     if explicit_path:
         path = Path(explicit_path)
-    elif os.environ.get("HME_CONFIG"):
-        path = Path(os.environ["HME_CONFIG"])
+    elif os.environ.get("ASTRA_CONFIG"):
+        path = Path(os.environ["ASTRA_CONFIG"])
     else:
         path = package_root() / "config.json"
 
@@ -38,13 +38,3 @@ def save_json(path: Path, payload: Any) -> None:
     ensure_dir(path.parent)
     with path.open("w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
-
-
-def clamp_demo_particle_count(particle_count: int, cap: int = 1024) -> int:
-    """All-to-all SPH is O(N^2). Keep demos runnable by clamping.
-
-    This doesn't change the stored config; it's only a runtime safety for the demo orchestrator.
-    """
-    if particle_count <= cap:
-        return particle_count
-    return cap

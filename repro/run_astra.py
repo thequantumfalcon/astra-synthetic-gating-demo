@@ -84,7 +84,7 @@ def main() -> None:
         [
             sys.executable,
             "-m",
-            "harmonic_matter_engine_v6.astra",
+            "astra",
             "--out",
             str(ASTRA_OUTPUT_DIR),
             "--seed",
@@ -94,8 +94,8 @@ def main() -> None:
 
     # 2) Assemble bundle for paper build (copy LaTeX tree first).
     shutil.copytree(PAPER_DIR, BUNDLE_DIR)
-    proof_source = ENGINE_DIR / "harmonic_matter_engine_v6" / "astra" / "astra_proof.py"
-    proof_target = BUNDLE_DIR / "engine" / "harmonic_matter_engine_v6" / "astra" / "astra_proof.py"
+    proof_source = ENGINE_DIR / "astra" / "astra_proof.py"
+    proof_target = BUNDLE_DIR / "engine" / "astra" / "astra_proof.py"
     proof_target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(proof_source, proof_target)
 
@@ -104,7 +104,7 @@ def main() -> None:
         [
             sys.executable,
             "-m",
-            "harmonic_matter_engine_v6.astra",
+            "astra",
             "--out",
             str(BUNDLE_DIR),
             "--seed",

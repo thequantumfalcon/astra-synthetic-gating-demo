@@ -12,7 +12,7 @@ from typing import Any
 import atheris
 
 with atheris.instrument_imports():
-    from harmonic_matter_engine_v6.utils import clamp_demo_particle_count, load_config, save_json
+    from astra.utils import load_config, save_json
 
 
 def _consume_text(provider: atheris.FuzzedDataProvider, max_len: int = 32) -> str:
@@ -58,14 +58,6 @@ def _consume_json_value(provider: atheris.FuzzedDataProvider, depth: int = 0) ->
 
 def TestOneInput(data: bytes) -> None:
     provider = atheris.FuzzedDataProvider(data)
-
-    particle_count = provider.ConsumeIntInRange(-10_000, 10_000)
-    cap = provider.ConsumeIntInRange(0, 4096)
-    clamped = clamp_demo_particle_count(particle_count, cap=cap)
-    if cap >= 0 and clamped > cap:
-        raise RuntimeError("clamp_demo_particle_count exceeded cap")
-    if particle_count <= cap and clamped != particle_count:
-        raise RuntimeError("clamp_demo_particle_count changed in-range input")
 
     payload = _consume_json_value(provider)
 

@@ -14,10 +14,10 @@ python repro/build_paper.py
 \subsection{Manual commands (alternative)}
 The following commands reproduce the artifacts directly.  Path separators and copy commands differ between Windows and Unix; the examples below use Unix-style (\texttt{/}) syntax.
 \begin{verbatim}
-python -m harmonic_matter_engine_v6.astra \
+python -m astra \
     --out astra_output --seed 123
 
-python -m harmonic_matter_engine_v6.astra \
+python -m astra \
     --out astra_submission_bundle --seed 123 --mc 200
 
 cd astra_submission_bundle

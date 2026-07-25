@@ -49,7 +49,7 @@ Pull requests are also fuzzed with ClusterFuzzLite against the repository's JSON
 
 ## Directory structure
 
-- `engine/` — MIT-licensed Python package source (`harmonic_matter_engine_v6`), including the ASTRA entrypoint (`python -m harmonic_matter_engine_v6.astra`).
+- `engine/` — MIT-licensed Python package source (`astra`), including the demo entrypoint (`python -m astra`).
 - `paper/` — LaTeX manuscript sources used to rebuild the preprint (includes `paper.tex` and `sections/`).
 - `repro/` — Cross-platform scripts to regenerate artifacts, build the PDF, and verify outputs (writes a run manifest for traceability).
 - `astra_output/` — Runtime-generated outputs from a non-MC run (created by the reproduction scripts).

@@ -10,19 +10,18 @@ import numpy as np
 
 @dataclass(frozen=True)
 class AstraParams:
-    """Parameter block for the synthetic ASTRA burst prediction demo."""
+    """Parameters of the illustrative burst injected into synthetic noise.
 
+    These values are chosen to make the gating effect visible in a short,
+    fixed-seed demonstration. They are not derived from any physical model
+    and are not a prediction of any astrophysical signal.
+    """
+
+    # Epoch label carried through to the artifacts for traceability only.
     mjd: int = 59942
-    f_spin_hz: float = 100.0
-    glitch_mag: float = 1.15e-12
-    gv: float = 0.35
 
-    # Vacuum-collapse / fracture energy scale (demo)
-    E_vac_erg: float = 4.0e33
-    dist_cm: float = 1.3 * 3.086e21
-
-    # Predicted burst parameters
-    h0_refined: float = 3.46e-21
+    # Illustrative burst shape: a damped sinusoid.
+    h0: float = 3.46e-21
     f_gw_hz: float = 200.0
     tau_s: float = 0.3
     t0_s: float = 30.0
@@ -36,25 +35,6 @@ class GatingParams:
     duration_s: int = 60
     noise_std: float = 5.0e-23
     threshold_sigma: float = 8.0
-
-
-def run_astra_kernel(params: AstraParams) -> float:
-    """Compute the (demo) predicted GW strain for the glitch epoch.
-
-    This does not fetch or validate external observational datasets; it produces a
-    deterministic, publication-friendly log with the parameters used.
-    """
-    omega = 2.0 * np.pi * params.f_spin_hz
-    _ = omega, params.glitch_mag, params.gv
-
-    # Quadrupole-ish scaling (toy)
-    h0_quad = (4.0 * 6.67e-8 * params.E_vac_erg) / (2.99e10**4 * params.dist_cm)
-    print(f"[ASTRA] Initializing Vector-Enhanced Kernel (Gv={params.gv:.2f})...")
-    print(f"[ASTRA] Glitch Epoch (MJD): {params.mjd}")
-    print(f"[ASTRA] Quadrupole baseline h0: {h0_quad:.3e}")
-    print(f"[ASTRA] Predicted GW Strain (h0): {params.h0_refined:.3e}")
-    print(f"[ASTRA] Predicted GW: f={params.f_gw_hz:.1f} Hz, tau={params.tau_s:.2f} s")
-    return float(params.h0_refined)
 
 
 def _make_timeseries(gp: GatingParams) -> np.ndarray:
@@ -85,7 +65,7 @@ def apply_gating(data: np.ndarray, threshold: float) -> tuple[np.ndarray, np.nda
     return gated, mask
 
 
-def verify_gating_paradox(
+def run_gating_trial(
     h_signal: float,
     params: AstraParams,
     gp: GatingParams,
@@ -100,9 +80,7 @@ def verify_gating_paradox(
     regenerating the same random draw.
     """
     if verbose:
-        print(
-            "\n[ASTRA] Running LIGO Engineering-Phase Pipeline Simulation (synthetic)..."
-        )
+        print("\n[ASTRA] Running synthetic gating trial...")
 
     rng = np.random.default_rng(seed)
     t = _make_timeseries(gp)
@@ -228,7 +206,6 @@ def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(
         description="Project ASTRA reproducibility proof (synthetic gating demo)."
     )
-    ap.add_argument("--prompt", type=str, default="Project ASTRA / PSR J0900-3144")
     ap.add_argument("--mjd", type=int, default=59942)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", type=str, default="astra_output")
@@ -251,11 +228,10 @@ def main(argv: list[str] | None = None) -> None:
     print("==================================================")
     print("          PROJECT ASTRA — REPRODUCIBILITY          ")
     print("==================================================")
-    print(f"[ASTRA] Prompt: {args.prompt}")
 
     params = AstraParams(
         mjd=int(args.mjd),
-        h0_refined=float(args.h0),
+        h0=float(args.h0),
         f_gw_hz=float(args.f_gw),
         tau_s=float(args.tau),
         t0_s=float(args.t0),
@@ -267,11 +243,12 @@ def main(argv: list[str] | None = None) -> None:
         threshold_sigma=float(args.threshold_sigma),
     )
 
-    h = run_astra_kernel(params)
+    h = float(params.h0)
+    print(f"[ASTRA] Injected burst: h0={h:.3e}, f={params.f_gw_hz:.1f} Hz, tau={params.tau_s:.2f} s")
 
-    # Single generation path: verify_gating_paradox returns both the summary
+    # Single generation path: run_gating_trial returns both the summary
     # dict and the arrays, avoiding a redundant second RNG draw.
-    result = verify_gating_paradox(
+    result = run_gating_trial(
         h, params, gp, seed=int(args.seed), verbose=True, return_arrays=True,
     )
     summary, t, data, gated_data = result
@@ -283,7 +260,7 @@ def main(argv: list[str] | None = None) -> None:
         base_seed = int(args.seed)
         for i in range(int(args.mc)):
             s = base_seed + i
-            rows.append(verify_gating_paradox(h, params, gp, seed=s, verbose=False))
+            rows.append(run_gating_trial(h, params, gp, seed=s, verbose=False))
         _write_mc_artifacts(out_dir, rows)
     print(f"\n[ASTRA] Wrote artifacts: {out_dir.resolve()}")
     print("[ASTRA] - verification_log.txt")
