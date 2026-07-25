@@ -93,6 +93,9 @@ jobs:
           echo "Running: python repro/verify_astra.py"
           python repro/verify_astra.py
 
+      - name: Check regenerated artifacts against the reference copies
+        run: python repro/check_reference_artifacts.py
+
   build-pdf:
     name: build-pdf (${{ matrix.os }})
     strategy:
