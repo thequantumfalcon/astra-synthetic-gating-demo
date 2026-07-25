@@ -21,6 +21,7 @@ from astra.astra_proof import (
     apply_gating,
     inject_burst,
     population_std,
+    report,
     run_gating_trial,
 )
 
@@ -148,6 +149,19 @@ class TestPopulationStd:
         x = rng.normal(0.0, 5.0e-23, size=50_000)
         shuffled = rng.permutation(x)
         assert population_std(shuffled) == population_std(x)
+
+    def test_report_absorbs_last_ulp_drift(self):
+        """Values one ulp apart must serialise identically.
+
+        This is what makes the published artifacts reproducible on machines whose
+        CPUs make numpy's normal generator differ in the final ulp.
+        """
+        assert report(7.991094503618095) == report(7.991094503618096)
+        assert report(3.998009872088356e-22) == report(3.998009872088358e-22)
+
+    def test_report_keeps_ten_significant_digits(self):
+        assert report(70.00645697734741) == 70.00645698
+        assert report(0.0) == 0.0
 
     def test_zero_variance(self):
         assert population_std(np.full(100, 3.0)) == 0.0

@@ -29,6 +29,24 @@ def population_std(x: np.ndarray) -> float:
     return math.sqrt(math.fsum((v - mean) * (v - mean) for v in values) / n)
 
 
+# Statistics are reported to this many significant digits. numpy's normal generator
+# is not bit-reproducible across C runtimes — a handful of the 245,760 draws come out
+# one ulp apart on different machines, and that is visible even between two Linux CI
+# runners with different CPUs. Those final digits therefore encode which processor
+# happened to run the job rather than anything about the experiment. Ten significant
+# digits is far more precision than a peak-based SNR proxy carries, and it is the
+# precision at which the published artifacts actually reproduce.
+REPORT_SIGNIFICANT_DIGITS = 10
+
+
+def report(value: float) -> float:
+    """Round a derived statistic to the precision that reproduces across machines."""
+    if value == 0.0 or not math.isfinite(value):
+        return value
+    exponent = math.floor(math.log10(abs(value)))
+    return round(value, REPORT_SIGNIFICANT_DIGITS - 1 - exponent)
+
+
 @dataclass(frozen=True)
 class AstraParams:
     """Parameters of the illustrative burst injected into synthetic noise.
@@ -131,13 +149,13 @@ def run_gating_trial(
         "duration_s": gp.duration_s,
         "noise_std": gp.noise_std,
         "threshold_sigma": gp.threshold_sigma,
-        "threshold": threshold,
+        "threshold": report(threshold),
         "h0": h_signal,
         "f_gw_hz": params.f_gw_hz,
         "tau_s": params.tau_s,
         "t0_s": params.t0_s,
-        "snr_before": snr_before,
-        "snr_after": snr_after,
+        "snr_before": report(snr_before),
+        "snr_after": report(snr_after),
         "gated_fraction": gated_fraction,
     }
     if return_arrays:

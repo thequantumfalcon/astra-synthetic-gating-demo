@@ -93,11 +93,7 @@ jobs:
           echo "Running: python repro/verify_astra.py"
           python repro/verify_astra.py
 
-      # Bit-exact comparison is asserted only on the platform the reference copies
-      # were generated on. numpy's normal generation is not bit-reproducible across
-      # C runtimes, so Windows runs the invariant checks above but not this one.
       - name: Check regenerated artifacts against the reference copies
-        if: runner.os == 'Linux'
         run: python repro/check_reference_artifacts.py
 
   build-pdf:

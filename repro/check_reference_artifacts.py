@@ -7,26 +7,21 @@ ones the manuscript was written against, because it never looks at a reference.
 This script closes that gap. It diffs the freshly generated bundle against the copies
 tracked under paper/, so "reproducible" is enforced rather than asserted.
 
-The comparison is exact, and it is asserted on one declared platform.
+The comparison is exact, on every platform.
 
-Two separate things used to make these numbers wander between machines. The first
-was ours: np.std reduces in an order that depends on SIMD width, so the same values
-summed to a different final ulp on different CPUs, which moved the gating threshold
-and flipped samples sitting on the boundary. astra_proof.population_std fixes that
-by reducing with math.fsum, which is correctly rounded and therefore order
-independent. threshold and snr_before now agree bit-for-bit everywhere.
+Two things had to be fixed to make that true. np.std reduces in an order that
+depends on SIMD width, so identical values summed to a different final ulp on
+different CPUs, shifting the gating threshold; astra_proof.population_std reduces
+with math.fsum instead, which is correctly rounded and order independent.
 
-The second is not ours. numpy's normal generator is not bit-reproducible across C
-runtimes: on Linux x86-64 a handful of the 245,760 draws come out one ulp away from
-the values Windows and macOS produce, and disabling AVX-512 does not change it,
-which points at the ziggurat's rare tail path calling libm log. Those few samples
-can change which value survives the gate, so snr_after still differs in about a
-dozen of the 200 rows at a relative scale of 3e-16.
+And numpy's normal generator is not bit-reproducible across C runtimes: a handful of
+the 245,760 draws come out one ulp apart on different machines. That is visible even
+between two Linux CI runners with different CPUs, so it cannot be pinned away by
+declaring a reference platform. Rather than tolerate the drift, astra_proof.report
+serialises derived statistics at ten significant digits — far more than a peak-based
+SNR proxy carries, and the precision at which the artifacts genuinely reproduce.
 
-Reimplementing normal generation with correctly-rounded transcendentals is the only
-way to remove that, and it is not worth it for a demo. So the reference copies are
-declared to be Linux-generated, this check runs on Linux, and Windows runs the
-invariant checks instead. If this check fails, something real changed.
+If this check fails, something real changed.
 """
 
 from __future__ import annotations

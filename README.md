@@ -51,41 +51,24 @@ closes that gap.
 This one diffs the regenerated bundle against the reference copies tracked in `paper/`,
 cell by cell. Both scripts run in CI on Windows and Linux.
 
-**The comparison is exact, and it is asserted on one declared platform.** Building this
-check turned up two separate reasons the numbers used to wander between machines.
+**The comparison is exact, on both platforms CI runs.** Getting there meant fixing two
+things rather than loosening the check.
 
-The first was in this code. `np.std` reduces in an order that depends on SIMD width, so
-identical values summed to a different final ulp on different CPUs. That shifted
-`threshold = 8σ`, which flipped samples sitting exactly on the gating boundary and moved
-the reported post-gating SNR by a visible amount. `astra.astra_proof.population_std`
-reduces with `math.fsum`, which is correctly rounded and therefore order-independent;
-`threshold` and `snr_before` now agree bit-for-bit on every platform tested.
+`np.std` reduces in an order that depends on SIMD width, so identical values summed to a
+different final ulp on different CPUs. That shifted `threshold = 8σ` and moved the
+reported statistics. `astra.astra_proof.population_std` reduces with `math.fsum`, which
+is correctly rounded and therefore order-independent.
 
-The second is upstream and not fixable here. numpy's normal generator is not
-bit-reproducible across C runtimes: on Linux x86-64 a handful of the 245,760 draws come
-out one ulp away from what Windows and macOS produce, and disabling AVX-512 does not
-change it — which points at the ziggurat's rare tail path calling libm `log`. Those few
-samples can change which value survives the gate, so `snr_after` still differs in about
-a dozen of the 200 rows, at a relative scale of 3e-16. `mc_table.tex` and
-`verification_log.txt` are identical everywhere, since rounding absorbs it.
+Separately, numpy's normal generator is not bit-reproducible across C runtimes: a handful
+of the 245,760 draws come out one ulp apart on different machines. This is visible even
+between two Linux CI runners with different CPUs, so it cannot be pinned away. Reporting
+those statistics to 17 significant digits was therefore claiming precision that encodes
+which processor ran the job. `astra.astra_proof.report` serialises them at ten
+significant digits — far more than a peak-based SNR proxy carries, and the precision at
+which the published artifacts actually reproduce.
 
-So the reference copies in `paper/` are Linux-generated, the exact check runs on Linux,
-and Windows runs the reproduction and invariant checks instead. Reproducing this work
-bit-for-bit means using the pinned environment on Linux; anywhere else, expect the
-invariants to hold and the statistics to agree to roughly one part in 10^16.
-
-PDF files are not expected to be byte-for-byte identical across platforms or TeX
-distributions (timestamps and PDF object IDs vary), and the verifier does not inspect
-the built PDF at all.
-
-CI (GitHub Actions) runs reproduction + verification on both Windows and Linux. The
-paper PDF is built in CI on Linux as a smoke test, but is not verified byte-for-byte.
-
-Published GitHub releases attach a reproducibility bundle: `astra-release-artifacts.tgz`, its `astra-release-artifacts.tgz.sha256` checksum, a CycloneDX SBOM (`sbom.cdx.json`), and an in-toto provenance bundle (`astra-release-artifacts.tgz.intoto.jsonl`).
-
-Pull requests are fuzzed with ClusterFuzzLite against the JSON config load/save
-helpers in `engine/astra/utils.py`. The fuzzer covers those helpers only; it does not
-exercise the gating code path.
+Full-precision arrays are still written to `astra_injection.npz` for anyone who wants
+them; it is the reported summary statistics that are rounded.
 
 ## Directory structure
 
