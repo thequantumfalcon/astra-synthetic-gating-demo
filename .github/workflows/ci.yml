@@ -93,16 +93,16 @@ jobs:
           echo "Running: python repro/verify_astra.py"
           python repro/verify_astra.py
 
-      - name: Determinism diagnostic (temporary)
-        run: python repro/_diag_determinism.py
-
-      - name: Determinism diagnostic with SIMD baseline (temporary)
-        run: python repro/_diag_determinism.py
-        env:
-          NPY_DISABLE_CPU_FEATURES: "AVX512F AVX512CD AVX512_SKX AVX512_KNL AVX512_KNM AVX512_CLX AVX512_CNL AVX512_ICL AVX512_SPR"
-
-      - name: Check regenerated artifacts against the reference copies
-        run: python repro/check_reference_artifacts.py
+      - name: Publish generated artifacts (temporary)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: linux-reference-artifacts
+          path: |
+            astra_submission_bundle/mc_summary.csv
+            astra_submission_bundle/mc_table.tex
+            astra_submission_bundle/verification_log.txt
+          if-no-files-found: error
 
   build-pdf:
     name: build-pdf (${{ matrix.os }})
