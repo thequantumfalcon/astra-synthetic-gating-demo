@@ -13,6 +13,15 @@ resource "github_repository_ruleset" "main_protection" {
   target      = "branch"
   enforcement = "active"
 
+  # Repository admins can land local merges without disabling the ruleset.
+  # Toggling enforcement off and on around a push leaves main briefly unprotected,
+  # which is worse than a scoped bypass.
+  bypass_actors {
+    actor_id    = 5
+    actor_type  = "RepositoryRole"
+    bypass_mode = "always"
+  }
+
   conditions {
     ref_name {
       include = ["refs/heads/main"]
