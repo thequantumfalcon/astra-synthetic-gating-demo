@@ -58,7 +58,7 @@
             "context": "generate-sbom"
           },
           {
-            "context": "secure-template"
+            "context": "workflow-lint"
           }
         ]
       }

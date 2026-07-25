@@ -1,8 +1,15 @@
 # Exact runtime pin for artifact reproduction.
 #
 # numpy is pinned because peak-based statistics in mc_summary.csv can differ in
-# the final ulp between numpy releases. The reproduction and PDF-build CI jobs
-# install from this file so artifacts are generated in a fixed environment.
+# the final ulp between numpy releases. The reproduction, PDF-build and release
+# jobs install from this file so artifacts come from a fixed environment.
+#
+# This pin is deliberately frozen: 2.4.1 is the version that produced the
+# reference artifacts committed under paper/. Raising it is a real change, not
+# routine maintenance, and should be done in a commit that also regenerates those
+# artifacts under the pinned Python (3.11.9) so the two stay in correspondence.
+# Dependabot security updates are unaffected by this policy: they bypass the
+# version-update schedule, so an advisory against numpy would still open a PR.
 #
 # Build tooling (pip, setuptools) is deliberately not pinned here: CI upgrades
 # pip to the current release, and pinning older build tools in this file only

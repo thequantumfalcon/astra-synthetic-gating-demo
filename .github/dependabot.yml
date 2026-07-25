@@ -31,3 +31,12 @@ updates:
       actions:
         patterns:
           - "*"
+
+  - package-ecosystem: "docker"
+    directory: "/.clusterfuzzlite"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"

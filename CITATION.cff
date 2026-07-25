@@ -4,8 +4,8 @@ message: "If you use this artifact bundle, please cite this project using the me
 type: software
 authors:
   - name: "ASTRA Contributors"
-date-released: "2026-02-10"
-version: "v5.0.3"
+date-released: "2026-07-25"
+version: "6.0.0"
 repository-code: "https://github.com/thequantumfalcon/astra-synthetic-gating-demo"
 keywords:
   - reproducibility

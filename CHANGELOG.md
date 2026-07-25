@@ -2,7 +2,7 @@
 
 All notable changes to this reproducibility package are documented in this file.
 
-## [Unreleased]
+## [6.0.0] - 2026-07-25
 
 ### Removed
 - Removed modules inherited from an unrelated parent project that were never part of
@@ -50,9 +50,24 @@ All notable changes to this reproducibility package are documented in this file.
   jobs that need them. Scorecard had scored Token-Permissions 0/10.
 - The published CycloneDX SBOM was generated from the unpinned requirements file and
   recorded numpy with no version; it now reads the lock file.
-- Updated all pinned actions (checkout v6.0.3, codeql-action v4.36.1, upload-artifact
-  v7.0.1, setup-python v6.2.0, dependency-review v5.0.0, attest-build-provenance
-  v4.1.0, harden-runner v2.19.4) and pinned zizmor.
+- Updated all pinned actions (checkout v7.0.1, codeql-action v4.37.3, upload-artifact
+  v7.0.1, setup-python v7.0.0, dependency-review v5.0.0, attest-build-provenance
+  v4.1.1, scorecard-action v2.4.4, harden-runner v2.20.0) and pinned zizmor. Every pin
+  now carries its resolved version as a trailing comment.
+- Pinned the ClusterFuzzLite base image by digest and added a docker ecosystem to
+  Dependabot so the digest does not go stale unnoticed.
+- `scripts/audit-github-hardening.sh` printed `FAIL` lines but always exited 0, and
+  reported "authenticated for remote security checks" without performing one. It now
+  exits non-zero on failure and actually checks open Dependabot alerts, whether private
+  vulnerability reporting is enabled, and whether every status check the live ruleset
+  requires corresponds to a workflow that still exists. That last check would have
+  caught the `engine-jax-tests` breakage in this release. It runs in CI on every PR.
+- Renamed `hardened-ci-template` to `workflow-lint`. It was never a template: it is the
+  repository's only workflow-security gate (zizmor) and it ran on every PR. It also
+  duplicated a test run that `ci` already performs on two operating systems, which has
+  been dropped. The required-status-check lists were updated in the same change.
+- `requirements-lock.txt` now documents that its numpy pin is deliberately frozen to the
+  version that produced the committed reference artifacts, and what raising it requires.
 
 ## [v5.0.3] - 2026-02-10
 
