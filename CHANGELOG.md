@@ -2,6 +2,27 @@
 
 All notable changes to this reproducibility package are documented in this file.
 
+## [6.1.0] - 2026-07-25
+
+### Fixed
+- Reported statistics now reproduce on any machine. Two defects were behind this.
+  `np.std` reduces in an order that depends on SIMD width, so identical values summed
+  to a different final ulp on different CPUs, shifting `threshold = 8*std` and moving
+  the reported numbers; `population_std()` now reduces with `math.fsum`, which is
+  correctly rounded and order-independent. Separately, numpy's normal generator is not
+  bit-reproducible across C runtimes — a handful of the 245,760 draws differ by one ulp
+  between machines, visible even between two Linux CI runners with different CPUs — so
+  serialising these statistics to 17 significant digits was claiming precision that
+  encoded which processor ran the job. `report()` rounds derived statistics to ten
+  significant digits, well beyond what a peak-based SNR proxy carries. Full-precision
+  arrays are still written to the NPZ.
+
+### Added
+- `repro/check_reference_artifacts.py` diffs regenerated artifacts against the reference
+  copies in `paper/` and runs in CI on both operating systems. `verify_astra.py` only
+  ever checked internal consistency, so a run producing different numbers passed as long
+  as the invariants held. The comparison is exact, with no tolerance.
+
 ## [6.0.0] - 2026-07-25
 
 ### Removed

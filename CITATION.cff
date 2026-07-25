@@ -5,7 +5,7 @@ type: software
 authors:
   - name: "ASTRA Contributors"
 date-released: "2026-07-25"
-version: "6.0.0"
+version: "6.1.0"
 repository-code: "https://github.com/thequantumfalcon/astra-synthetic-gating-demo"
 keywords:
   - reproducibility

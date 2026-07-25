@@ -1,6 +1,6 @@
 [project]
 name = "astra-synthetic-gating-demo"
-version = "6.0.0"
+version = "6.1.0"
 description = "Reproducibility package for the ASTRA synthetic gating preprint"
 readme = "README.md"
 license = {text = "MIT"}
