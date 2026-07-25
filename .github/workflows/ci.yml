@@ -93,16 +93,12 @@ jobs:
           echo "Running: python repro/verify_astra.py"
           python repro/verify_astra.py
 
-      - name: Publish generated artifacts (temporary)
+      # Bit-exact comparison is asserted only on the platform the reference copies
+      # were generated on. numpy's normal generation is not bit-reproducible across
+      # C runtimes, so Windows runs the invariant checks above but not this one.
+      - name: Check regenerated artifacts against the reference copies
         if: runner.os == 'Linux'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: linux-reference-artifacts
-          path: |
-            astra_submission_bundle/mc_summary.csv
-            astra_submission_bundle/mc_table.tex
-            astra_submission_bundle/verification_log.txt
-          if-no-files-found: error
+        run: python repro/check_reference_artifacts.py
 
   build-pdf:
     name: build-pdf (${{ matrix.os }})

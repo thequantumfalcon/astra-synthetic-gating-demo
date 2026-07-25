@@ -51,17 +51,28 @@ closes that gap.
 This one diffs the regenerated bundle against the reference copies tracked in `paper/`,
 cell by cell. Both scripts run in CI on Windows and Linux.
 
-**The comparison is exact**, and getting it there required a fix rather than a
-tolerance. numpy fills and reduces arrays through SIMD paths whose width depends on the
-CPU, so the same pinned Python and numpy produced the same *values* in a different
-*order* on Windows and Linux. Summation is order-dependent, so `np.std` landed a final
-ulp apart; that shifted the gating threshold, which flipped samples sitting exactly on
-the boundary and moved the reported post-gating SNR by a visible amount.
+**The comparison is exact, and it is asserted on one declared platform.** Building this
+check turned up two separate reasons the numbers used to wander between machines.
 
-`astra.astra_proof.population_std` reduces with `math.fsum`, which is correctly rounded
-and therefore returns the same result for any ordering of the same values. The
-statistics are now bit-identical across architectures, and the check enforces that
-rather than tolerating drift.
+The first was in this code. `np.std` reduces in an order that depends on SIMD width, so
+identical values summed to a different final ulp on different CPUs. That shifted
+`threshold = 8σ`, which flipped samples sitting exactly on the gating boundary and moved
+the reported post-gating SNR by a visible amount. `astra.astra_proof.population_std`
+reduces with `math.fsum`, which is correctly rounded and therefore order-independent;
+`threshold` and `snr_before` now agree bit-for-bit on every platform tested.
+
+The second is upstream and not fixable here. numpy's normal generator is not
+bit-reproducible across C runtimes: on Linux x86-64 a handful of the 245,760 draws come
+out one ulp away from what Windows and macOS produce, and disabling AVX-512 does not
+change it — which points at the ziggurat's rare tail path calling libm `log`. Those few
+samples can change which value survives the gate, so `snr_after` still differs in about
+a dozen of the 200 rows, at a relative scale of 3e-16. `mc_table.tex` and
+`verification_log.txt` are identical everywhere, since rounding absorbs it.
+
+So the reference copies in `paper/` are Linux-generated, the exact check runs on Linux,
+and Windows runs the reproduction and invariant checks instead. Reproducing this work
+bit-for-bit means using the pinned environment on Linux; anywhere else, expect the
+invariants to hold and the statistics to agree to roughly one part in 10^16.
 
 PDF files are not expected to be byte-for-byte identical across platforms or TeX
 distributions (timestamps and PDF object IDs vary), and the verifier does not inspect

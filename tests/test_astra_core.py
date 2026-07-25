@@ -20,6 +20,7 @@ from astra.astra_proof import (
     _make_timeseries,
     apply_gating,
     inject_burst,
+    population_std,
     run_gating_trial,
 )
 
@@ -126,6 +127,33 @@ class TestMakeTimeseries:
         t = _make_timeseries(gp)
         dt = t[1] - t[0]
         np.testing.assert_allclose(dt, 1.0 / 4096, rtol=1e-12)
+
+
+# ---------------------------------------------------------------------------
+# astra_proof.py — population_std
+# ---------------------------------------------------------------------------
+class TestPopulationStd:
+    def test_matches_numpy_on_ordinary_data(self):
+        rng = np.random.default_rng(0)
+        x = rng.normal(0.0, 1.0, size=10_000)
+        np.testing.assert_allclose(population_std(x), np.std(x), rtol=1e-12)
+
+    def test_is_invariant_under_permutation(self):
+        """The property the reproducibility contract rests on.
+
+        np.std reduces in an order that depends on SIMD width, so it can return a
+        different final ulp on different CPUs. population_std must not.
+        """
+        rng = np.random.default_rng(1)
+        x = rng.normal(0.0, 5.0e-23, size=50_000)
+        shuffled = rng.permutation(x)
+        assert population_std(shuffled) == population_std(x)
+
+    def test_zero_variance(self):
+        assert population_std(np.full(100, 3.0)) == 0.0
+
+    def test_single_element(self):
+        assert population_std(np.array([2.5])) == 0.0
 
 
 # ---------------------------------------------------------------------------

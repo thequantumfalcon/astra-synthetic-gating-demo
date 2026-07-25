@@ -7,11 +7,26 @@ ones the manuscript was written against, because it never looks at a reference.
 This script closes that gap. It diffs the freshly generated bundle against the copies
 tracked under paper/, so "reproducible" is enforced rather than asserted.
 
-The comparison is exact. numpy fills and reduces arrays through SIMD paths whose
-width varies by CPU architecture, which used to leave the reported statistics a
-final ulp apart between Windows and Linux; astra_proof.population_std removes that
-by reducing with math.fsum, which is correctly rounded and therefore independent of
-summation order. If this check fails, something real changed.
+The comparison is exact, and it is asserted on one declared platform.
+
+Two separate things used to make these numbers wander between machines. The first
+was ours: np.std reduces in an order that depends on SIMD width, so the same values
+summed to a different final ulp on different CPUs, which moved the gating threshold
+and flipped samples sitting on the boundary. astra_proof.population_std fixes that
+by reducing with math.fsum, which is correctly rounded and therefore order
+independent. threshold and snr_before now agree bit-for-bit everywhere.
+
+The second is not ours. numpy's normal generator is not bit-reproducible across C
+runtimes: on Linux x86-64 a handful of the 245,760 draws come out one ulp away from
+the values Windows and macOS produce, and disabling AVX-512 does not change it,
+which points at the ziggurat's rare tail path calling libm log. Those few samples
+can change which value survives the gate, so snr_after still differs in about a
+dozen of the 200 rows at a relative scale of 3e-16.
+
+Reimplementing normal generation with correctly-rounded transcendentals is the only
+way to remove that, and it is not worth it for a demo. So the reference copies are
+declared to be Linux-generated, this check runs on Linux, and Windows runs the
+invariant checks instead. If this check fails, something real changed.
 """
 
 from __future__ import annotations
