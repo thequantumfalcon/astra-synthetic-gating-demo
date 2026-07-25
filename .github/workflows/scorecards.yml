@@ -7,10 +7,9 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: read
-  security-events: write
-  id-token: write
+# The scorecard-action publish step rejects any workflow that grants write
+# permissions at the top level; keep these read-only and scope writes to the job.
+permissions: read-all
 
 jobs:
   analysis:
