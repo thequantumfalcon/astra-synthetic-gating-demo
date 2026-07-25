@@ -37,6 +37,9 @@
         "do_not_enforce_on_create": false,
         "required_status_checks": [
           {
+            "context": "lint"
+          },
+          {
             "context": "reproduce-and-verify (windows-latest)"
           },
           {
@@ -53,6 +56,9 @@
           },
           {
             "context": "generate-sbom"
+          },
+          {
+            "context": "secure-template"
           }
         ]
       }

@@ -36,7 +36,7 @@ Use `ops/github-rulesets.tf` with the GitHub provider and import or apply it aga
 
 The checked-in `main-protection` payload currently reflects a solo-maintainer workflow: pull requests are still required, but code-owner review, last-push approval, and the required approval count are disabled so a single maintainer can merge after status checks pass.
 
-The required status-check set covers the reproduction, PDF, CodeQL, dependency-review, and SBOM checks.
+The required status-check set covers lint, the reproduction and PDF builds, CodeQL, dependency-review, SBOM, and the workflow-security lint (`secure-template`).
 
 ## Additional repository settings outside rulesets
 
