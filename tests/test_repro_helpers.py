@@ -36,6 +36,20 @@ class TestRunAstraHelpers:
         assert manifest["mc_trials"] == run_astra.MC_TRIALS
         assert "python_version" in manifest
 
+    def test_manifest_records_no_local_paths(self, tmp_path):
+        """The manifest ships inside every release tarball.
+
+        Recording an absolute interpreter path would leak the home directory and
+        username of whoever ran the reproduction.
+        """
+        run_astra._write_manifest(tmp_path)
+        raw = (tmp_path / "run_manifest.json").read_text(encoding="utf-8")
+
+        assert "python_executable" not in raw
+        assert str(Path.home()) not in raw
+        for marker in ("/Users/", "/home/", "C:\\Users", "\\Users\\"):
+            assert marker not in raw, f"manifest leaked a local path containing {marker!r}"
+
     def test_main_copies_engine_proof_into_bundle(self, tmp_path, monkeypatch):
         paper_dir = tmp_path / "paper"
         engine_dir = tmp_path / "engine"

@@ -47,9 +47,13 @@ def _write_manifest(out_dir: Path) -> None:
     except Exception:
         numpy_version = None
 
+    # Deliberately no absolute interpreter path here: it is the local path of whoever
+    # ran the reproduction, so recording it would leak a home directory and username
+    # into every bundle and release tarball. The version and implementation are what
+    # matter for reproducing the run.
     manifest = {
         "pinned_python": PINNED_PYTHON,
-        "python_executable": sys.executable,
+        "python_implementation": platform.python_implementation(),
         "python_version": platform.python_version(),
         "platform": platform.platform(),
         "seed": SEED,

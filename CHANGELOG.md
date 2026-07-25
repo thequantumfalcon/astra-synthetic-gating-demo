@@ -2,6 +2,17 @@
 
 All notable changes to this reproducibility package are documented in this file.
 
+## [6.1.1] - 2026-07-25
+
+### Fixed
+- The run manifest recorded `python_executable`, the absolute path of the interpreter
+  that produced the bundle. That path ships inside the release tarball, so anyone
+  reproducing the work locally and sharing the result would disclose their home
+  directory and username. The manifest now records the Python implementation and
+  version instead, which is what reproducing the run actually needs. Published release
+  tarballs were built in CI and only ever contained the runner's path, so nothing was
+  disclosed. A test asserts the manifest contains no local paths.
+
 ## [6.1.0] - 2026-07-25
 
 ### Fixed
