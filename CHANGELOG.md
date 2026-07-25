@@ -40,7 +40,7 @@ All notable changes to this reproducibility package are documented in this file.
 - Fixed taper overlap and same-length cross-correlation behavior in `paper/astra_real_verify.py`.
 - Adjusted CI to build the manuscript PDF on Linux and refreshed `requirements-lock.txt`.
 
-## [v5.0] - 2026-02-03
+## [v5.0] - 2026-01-18
 
 ### Added
 - Added CI status reporting and the public reproducibility package baseline used for the first tagged release.

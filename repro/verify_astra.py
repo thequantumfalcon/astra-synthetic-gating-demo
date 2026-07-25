@@ -15,6 +15,7 @@ EXPECTED_FILES = [
     "mc_table.tex",
 ]
 
+
 def _load_manifest() -> dict | None:
     p = BUNDLE_DIR / "run_manifest.json"
     if not p.exists():
@@ -72,7 +73,9 @@ def _verify_verification_log(path: Path, errors: list[str]) -> None:
     if before is None or after is None:
         errors.append("verification_log.txt SNR fields are missing or non-numeric")
     elif after >= before:
-        errors.append(f"verification_log.txt expected snr_after < snr_before, got {after} >= {before}")
+        errors.append(
+            f"verification_log.txt expected snr_after < snr_before, got {after} >= {before}"
+        )
 
     if gated is None:
         errors.append("verification_log.txt gated_fraction is missing or non-numeric")
@@ -122,7 +125,9 @@ def _verify_npz(path: Path, errors: list[str]) -> None:
         t = data["t"]
 
         if h.shape != h_gated.shape:
-            errors.append(f"astra_injection.npz shape mismatch: h={h.shape} h_gated={h_gated.shape}")
+            errors.append(
+                f"astra_injection.npz shape mismatch: h={h.shape} h_gated={h_gated.shape}"
+            )
         if h.ndim != 1 or t.ndim != 1:
             errors.append("astra_injection.npz expected 1D arrays for h and t")
         if h.shape[0] == 0:

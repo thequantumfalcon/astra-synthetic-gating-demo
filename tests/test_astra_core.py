@@ -133,9 +133,7 @@ class TestMakeTimeseries:
 # ---------------------------------------------------------------------------
 class TestRunGatingTrial:
     def test_returns_dict(self):
-        result = run_gating_trial(
-            1e-21, AstraParams(), GatingParams(), seed=0, verbose=False
-        )
+        result = run_gating_trial(1e-21, AstraParams(), GatingParams(), seed=0, verbose=False)
         assert isinstance(result, dict)
         assert "snr_before" in result
         assert "snr_after" in result
@@ -143,29 +141,25 @@ class TestRunGatingTrial:
 
     def test_return_arrays(self):
         result = run_gating_trial(
-            1e-21, AstraParams(), GatingParams(), seed=0,
-            verbose=False, return_arrays=True,
+            1e-21,
+            AstraParams(),
+            GatingParams(),
+            seed=0,
+            verbose=False,
+            return_arrays=True,
         )
         summary, t, data, gated_data = result
         assert isinstance(summary, dict)
         assert t.shape == data.shape == gated_data.shape
 
     def test_deterministic_across_calls(self):
-        r1 = run_gating_trial(
-            1e-21, AstraParams(), GatingParams(), seed=42, verbose=False
-        )
-        r2 = run_gating_trial(
-            1e-21, AstraParams(), GatingParams(), seed=42, verbose=False
-        )
+        r1 = run_gating_trial(1e-21, AstraParams(), GatingParams(), seed=42, verbose=False)
+        r2 = run_gating_trial(1e-21, AstraParams(), GatingParams(), seed=42, verbose=False)
         assert r1 == r2
 
     def test_different_seeds_differ(self):
-        r1 = run_gating_trial(
-            1e-21, AstraParams(), GatingParams(), seed=0, verbose=False
-        )
-        r2 = run_gating_trial(
-            1e-21, AstraParams(), GatingParams(), seed=99, verbose=False
-        )
+        r1 = run_gating_trial(1e-21, AstraParams(), GatingParams(), seed=0, verbose=False)
+        r2 = run_gating_trial(1e-21, AstraParams(), GatingParams(), seed=99, verbose=False)
         assert r1["snr_before"] != r2["snr_before"]
 
 

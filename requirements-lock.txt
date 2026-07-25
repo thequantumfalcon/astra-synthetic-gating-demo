@@ -1,3 +1,10 @@
+# Exact runtime pin for artifact reproduction.
+#
+# numpy is pinned because peak-based statistics in mc_summary.csv can differ in
+# the final ulp between numpy releases. The reproduction and PDF-build CI jobs
+# install from this file so artifacts are generated in a fixed environment.
+#
+# Build tooling (pip, setuptools) is deliberately not pinned here: CI upgrades
+# pip to the current release, and pinning older build tools in this file only
+# produced advisories against packages that never enter the demo runtime.
 numpy==2.4.1
-pip==26.0
-setuptools==78.1.1

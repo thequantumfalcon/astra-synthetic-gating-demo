@@ -64,9 +64,7 @@ def tukey_window(n: int, alpha: float = 0.25) -> np.ndarray:
     w[left] = 0.5 * (1.0 + np.cos(np.pi * (2.0 * x[left] / alpha - 1.0)))
 
     right = x >= (1.0 - edge)
-    w[right] = 0.5 * (
-        1.0 + np.cos(np.pi * (2.0 * x[right] / alpha - 2.0 / alpha + 1.0))
-    )
+    w[right] = 0.5 * (1.0 + np.cos(np.pi * (2.0 * x[right] / alpha - 2.0 / alpha + 1.0)))
 
     return w
 
@@ -195,9 +193,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--noise-std", type=float, default=1e-23)
     ap.add_argument("--gate-k", type=float, default=25.0)
     ap.add_argument("--tukey-alpha", type=float, default=0.25)
-    ap.add_argument(
-        "--out", type=str, default="astra_submission_bundle/real_verify_log.txt"
-    )
+    ap.add_argument("--out", type=str, default="astra_submission_bundle/real_verify_log.txt")
     args = ap.parse_args(argv)
 
     # 1) Data acquisition
@@ -207,16 +203,12 @@ def main(argv: list[str] | None = None) -> None:
     dt: float
 
     if args.try_open_data:
-        real, real_dt, note = fetch_open_data(
-            args.gps, args.detector, args.duration, args.fs
-        )
+        real, real_dt, note = fetch_open_data(args.gps, args.detector, args.duration, args.fs)
         if real is not None and real_dt is not None:
             strain, dt = real, real_dt
             mode = "open_data"
         else:
-            strain, dt = synthetic_strain(
-                args.fs, args.duration, args.noise_std, args.seed
-            )
+            strain, dt = synthetic_strain(args.fs, args.duration, args.noise_std, args.seed)
             mode = "synthetic_fallback"
     else:
         strain, dt = synthetic_strain(args.fs, args.duration, args.noise_std, args.seed)
@@ -225,9 +217,7 @@ def main(argv: list[str] | None = None) -> None:
     template = make_template(dt, TemplateParams())
 
     # 3) Gating (illustrative)
-    gated, thr = apply_energy_gate(
-        strain, gate_k=args.gate_k, tukey_alpha=args.tukey_alpha
-    )
+    gated, thr = apply_energy_gate(strain, gate_k=args.gate_k, tukey_alpha=args.tukey_alpha)
 
     # 4) Scores (proxy)
     score_ungated = normalized_xcorr_max(strain, template)
@@ -255,9 +245,7 @@ def main(argv: list[str] | None = None) -> None:
     lines.append(f"template_tau_s: {TemplateParams.tau_s}")
     lines.append(f"score_ungated_proxy: {score_ungated}")
     lines.append(f"score_gated_proxy: {score_gated}")
-    lines.append(
-        f"score_ratio_ungated_over_gated: {score_ungated / (score_gated + 1e-30)}"
-    )
+    lines.append(f"score_ratio_ungated_over_gated: {score_ungated / (score_gated + 1e-30)}")
 
     write_log(out_path, lines)
     print(f"[ASTRA] Wrote: {out_path.resolve()}")
@@ -274,9 +262,7 @@ def main(argv: list[str] | None = None) -> None:
         ax.set_xlabel("t (s)")
         ax.set_ylabel("strain (arb)")
         ax.legend(loc="upper right")
-        ax.set_title(
-            f"ASTRA protocol: mode={mode}, gps={args.gps}, det={args.detector}"
-        )
+        ax.set_title(f"ASTRA protocol: mode={mode}, gps={args.gps}, det={args.detector}")
         png = out_path.with_suffix(".png")
         fig.tight_layout()
         fig.savefig(png, dpi=150)

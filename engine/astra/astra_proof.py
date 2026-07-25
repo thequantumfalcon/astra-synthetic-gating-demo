@@ -97,9 +97,7 @@ def run_gating_trial(
     gated_fraction = float(np.mean(gated_mask))
     if verbose:
         print(f"[PROOF] Noise std: {np.std(noise):.3e}")
-        print(
-            f"[PROOF] Gating threshold (sigma={gp.threshold_sigma:.1f}): {threshold:.3e}"
-        )
+        print(f"[PROOF] Gating threshold (sigma={gp.threshold_sigma:.1f}): {threshold:.3e}")
         print(f"[PROOF] Peak SNR before gating: {snr_before:.2f}")
         print(f"[PROOF] Peak SNR after gating:  {snr_after:.2f}")
         print(f"[PROOF] Gated samples fraction:  {gated_fraction:.6f}")
@@ -142,9 +140,7 @@ def write_artifacts(
             f.write(f"{k}: {summary[k]}\n")
 
     # Machine-readable arrays
-    np.savez_compressed(
-        out_dir / "astra_injection.npz", t=t, data=data, gated_data=gated_data
-    )
+    np.savez_compressed(out_dir / "astra_injection.npz", t=t, data=data, gated_data=gated_data)
 
 
 def _write_mc_artifacts(out_dir: Path, rows: list[dict]) -> None:
@@ -244,12 +240,19 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     h = float(params.h0)
-    print(f"[ASTRA] Injected burst: h0={h:.3e}, f={params.f_gw_hz:.1f} Hz, tau={params.tau_s:.2f} s")
+    print(
+        f"[ASTRA] Injected burst: h0={h:.3e}, f={params.f_gw_hz:.1f} Hz, tau={params.tau_s:.2f} s"
+    )
 
     # Single generation path: run_gating_trial returns both the summary
     # dict and the arrays, avoiding a redundant second RNG draw.
     result = run_gating_trial(
-        h, params, gp, seed=int(args.seed), verbose=True, return_arrays=True,
+        h,
+        params,
+        gp,
+        seed=int(args.seed),
+        verbose=True,
+        return_arrays=True,
     )
     summary, t, data, gated_data = result
     out_dir = Path(args.out)

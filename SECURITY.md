@@ -4,7 +4,9 @@
 
 If you discover a security issue in this repository, do not open a public issue with exploit details.
 
-Report the issue privately through GitHub security advisories if available for this repository. If private reporting is not enabled, open a minimal public issue that requests a private contact path without including sensitive details or proof-of-concept material.
+Report the issue privately using GitHub's private vulnerability reporting, which is
+enabled for this repository:
+<https://github.com/thequantumfalcon/astra-synthetic-gating-demo/security/advisories/new>
 
 For high-confidence findings affecting workflow integrity, release artifacts, dependency compromise, or credential exposure, include the impacted commit or tag, a minimal proof of impact, and the smallest reproduction needed to validate the report.
 
