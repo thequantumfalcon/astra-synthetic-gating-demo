@@ -2,10 +2,31 @@ from __future__ import annotations
 
 import argparse
 import csv
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+
+
+def population_std(x: np.ndarray) -> float:
+    """Population standard deviation that does not depend on summation order.
+
+    numpy fills and reduces arrays through SIMD paths whose width varies by CPU
+    architecture. The values it produces are the same, but their order is not, and
+    pairwise summation is order-dependent — so ``np.std`` can land a final ulp apart
+    on two machines even with the interpreter and numpy version pinned. That ulp
+    moves the gating threshold, which can flip a sample sitting on the boundary and
+    shift the reported post-gating SNR by a visible amount.
+
+    ``math.fsum`` is correctly rounded, so it returns the same result for any
+    ordering of the same values. Using it here makes the artifacts reproducible
+    across platforms rather than only on the one that generated them.
+    """
+    values = x.tolist()
+    n = len(values)
+    mean = math.fsum(values) / n
+    return math.sqrt(math.fsum((v - mean) * (v - mean) for v in values) / n)
 
 
 @dataclass(frozen=True)
@@ -88,15 +109,16 @@ def run_gating_trial(
     sig = inject_burst(t, h_signal, params.f_gw_hz, params.tau_s, params.t0_s)
     data = noise + sig
 
-    threshold = float(gp.threshold_sigma) * float(np.std(noise))
+    noise_std = population_std(noise)
+    threshold = float(gp.threshold_sigma) * noise_std
     gated_data, gated_mask = apply_gating(data, threshold)
 
-    snr_before = float(np.max(np.abs(data)) / (np.std(noise) + 1e-30))
-    snr_after = float(np.max(np.abs(gated_data)) / (np.std(noise) + 1e-30))
+    snr_before = float(np.max(np.abs(data)) / (noise_std + 1e-30))
+    snr_after = float(np.max(np.abs(gated_data)) / (noise_std + 1e-30))
 
     gated_fraction = float(np.mean(gated_mask))
     if verbose:
-        print(f"[PROOF] Noise std: {np.std(noise):.3e}")
+        print(f"[PROOF] Noise std: {noise_std:.3e}")
         print(f"[PROOF] Gating threshold (sigma={gp.threshold_sigma:.1f}): {threshold:.3e}")
         print(f"[PROOF] Peak SNR before gating: {snr_before:.2f}")
         print(f"[PROOF] Peak SNR after gating:  {snr_after:.2f}")

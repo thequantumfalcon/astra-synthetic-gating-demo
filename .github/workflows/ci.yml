@@ -93,9 +93,6 @@ jobs:
           echo "Running: python repro/verify_astra.py"
           python repro/verify_astra.py
 
-      - name: Determinism diagnostic (temporary)
-        run: python repro/_diag_determinism.py
-
       - name: Check regenerated artifacts against the reference copies
         run: python repro/check_reference_artifacts.py
 

@@ -51,19 +51,17 @@ closes that gap.
 This one diffs the regenerated bundle against the reference copies tracked in `paper/`,
 cell by cell. Both scripts run in CI on Windows and Linux.
 
-**What reproduction actually guarantees.** The reference copies were generated on
-Windows. With the same pinned Python 3.11.9 and numpy 2.4.1, Linux reproduces them to
-about one part in 10^16 — but not bit-for-bit, because numpy's reductions dispatch to
-different SIMD paths per architecture and `np.std` can land a final ulp away. That is a
-property of floating-point hardware, not of this code, and pinning cannot remove it.
+**The comparison is exact**, and getting it there required a fix rather than a
+tolerance. numpy fills and reduces arrays through SIMD paths whose width depends on the
+CPU, so the same pinned Python and numpy produced the same *values* in a different
+*order* on Windows and Linux. Summation is order-dependent, so `np.std` landed a final
+ulp apart; that shifted the gating threshold, which flipped samples sitting exactly on
+the boundary and moved the reported post-gating SNR by a visible amount.
 
-The enforced contract is therefore agreement to within a relative tolerance of 1e-12,
-which is four orders of magnitude tighter than the observed drift and far tighter than
-any real change to the pipeline could hide under. The check always reports whether the
-match was bit-identical. Expect bit-identical results only on the platform that
-produced the reference copies; expect agreement to ~1e-16 everywhere else. `mc_table.tex`
-and `verification_log.txt` do match exactly on both platforms, since rounding absorbs
-the difference.
+`astra.astra_proof.population_std` reduces with `math.fsum`, which is correctly rounded
+and therefore returns the same result for any ordering of the same values. The
+statistics are now bit-identical across architectures, and the check enforces that
+rather than tolerating drift.
 
 PDF files are not expected to be byte-for-byte identical across platforms or TeX
 distributions (timestamps and PDF object IDs vary), and the verifier does not inspect

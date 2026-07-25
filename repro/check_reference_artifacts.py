@@ -7,16 +7,11 @@ ones the manuscript was written against, because it never looks at a reference.
 This script closes that gap. It diffs the freshly generated bundle against the copies
 tracked under paper/, so "reproducible" is enforced rather than asserted.
 
-On what "match" means. The reference copies were generated on Windows. Running the
-same pinned Python 3.11.9 and numpy 2.4.1 on Linux reproduces them to roughly one
-part in 1e16, but not bit-for-bit: numpy's reductions dispatch to different SIMD
-paths per architecture, so np.std can land a final ulp away. That is a property of
-floating-point hardware, not of this code, and no amount of pinning removes it.
-
-So the enforced contract is agreement to within RELATIVE_TOLERANCE, which is orders
-of magnitude tighter than any real change to the pipeline could hide under, and the
-script always reports whether the match was bit-identical. Bit-identical
-reproduction is expected only on the platform the reference copies came from.
+The comparison is exact. numpy fills and reduces arrays through SIMD paths whose
+width varies by CPU architecture, which used to leave the reported statistics a
+final ulp apart between Windows and Linux; astra_proof.population_std removes that
+by reducing with math.fsum, which is correctly rounded and therefore independent of
+summation order. If this check fails, something real changed.
 """
 
 from __future__ import annotations
@@ -28,10 +23,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REFERENCE_DIR = REPO_ROOT / "paper"
 BUNDLE_DIR = REPO_ROOT / "astra_submission_bundle"
-
-# Observed cross-platform drift is ~1e-16 relative. A genuine algorithmic change
-# moves results far above this bound.
-RELATIVE_TOLERANCE = 1e-12
 
 
 def _fail(errors: list[str], message: str) -> None:
@@ -59,44 +50,21 @@ def _compare_csv(name: str, errors: list[str]) -> None:
         _fail(errors, f"{name}: {len(ref_rows)} reference rows vs {len(new_rows)} regenerated")
         return
 
-    inexact = 0
-    worst = 0.0
-    worst_cell = ""
+    mismatches = 0
     for i, (ref, new) in enumerate(zip(ref_rows, new_rows)):
         for col in ref_cols:
-            if ref[col] == new[col]:
-                continue
-            try:
-                ref_val, new_val = float(ref[col]), float(new[col])
-            except ValueError:
-                _fail(
-                    errors,
-                    f"{name}: row {i} column {col!r}: "
-                    f"reference {ref[col]!r} != regenerated {new[col]!r}",
-                )
-                continue
-            scale = max(abs(ref_val), abs(new_val))
-            rel = abs(ref_val - new_val) / scale if scale else abs(ref_val - new_val)
-            if rel > RELATIVE_TOLERANCE:
-                _fail(
-                    errors,
-                    f"{name}: row {i} column {col!r} differs by {rel:.3e} relative, "
-                    f"above the {RELATIVE_TOLERANCE:.0e} tolerance: "
-                    f"reference {ref[col]} != regenerated {new[col]}",
-                )
-            else:
-                inexact += 1
-                if rel > worst:
-                    worst, worst_cell = rel, f"row {i} column {col!r}"
-
-    if inexact:
-        print(
-            f"[reference] {name}: {len(ref_rows)} rows match within tolerance; "
-            f"{inexact} cell(s) not bit-identical "
-            f"(largest relative difference {worst:.3e} at {worst_cell})"
-        )
-    else:
-        print(f"[reference] {name}: {len(ref_rows)} rows bit-identical")
+            if ref[col] != new[col]:
+                mismatches += 1
+                if mismatches <= 5:
+                    _fail(
+                        errors,
+                        f"{name}: row {i} column {col!r}: "
+                        f"reference {ref[col]} != regenerated {new[col]}",
+                    )
+    if mismatches > 5:
+        _fail(errors, f"{name}: ...and {mismatches - 5} further cell mismatches")
+    if not mismatches:
+        print(f"[reference] {name}: {len(ref_rows)} rows identical")
 
 
 def _compare_text(name: str, errors: list[str]) -> None:
