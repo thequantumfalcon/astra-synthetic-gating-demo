@@ -42,11 +42,28 @@ the four expected artifacts exist, that `verification_log.txt` and `mc_summary.c
 carry the required fields, that the run used seed 123 and produced 200 Monte Carlo
 rows, that `snr_after < snr_before`, and that the gated fraction lands in `(0, 0.1)`.
 
-**It does not compare output against a stored reference.** These are internal
-consistency and invariant checks, not a golden-file diff — a run that satisfied every
-invariant with different numbers would still pass. Peak-based statistics can differ in
-the final ulp across numpy releases, which is why `requirements-lock.txt` pins numpy
-and why CI installs from it.
+On its own that is an internal-consistency check, not a golden-file diff: a run that
+satisfied every invariant with different numbers would still pass. So a second script
+closes that gap.
+
+- `python repro/check_reference_artifacts.py`
+
+This one diffs the regenerated bundle against the reference copies tracked in `paper/`,
+cell by cell. Both scripts run in CI on Windows and Linux.
+
+**What reproduction actually guarantees.** The reference copies were generated on
+Windows. With the same pinned Python 3.11.9 and numpy 2.4.1, Linux reproduces them to
+about one part in 10^16 — but not bit-for-bit, because numpy's reductions dispatch to
+different SIMD paths per architecture and `np.std` can land a final ulp away. That is a
+property of floating-point hardware, not of this code, and pinning cannot remove it.
+
+The enforced contract is therefore agreement to within a relative tolerance of 1e-12,
+which is four orders of magnitude tighter than the observed drift and far tighter than
+any real change to the pipeline could hide under. The check always reports whether the
+match was bit-identical. Expect bit-identical results only on the platform that
+produced the reference copies; expect agreement to ~1e-16 everywhere else. `mc_table.tex`
+and `verification_log.txt` do match exactly on both platforms, since rounding absorbs
+the difference.
 
 PDF files are not expected to be byte-for-byte identical across platforms or TeX
 distributions (timestamps and PDF object IDs vary), and the verifier does not inspect
